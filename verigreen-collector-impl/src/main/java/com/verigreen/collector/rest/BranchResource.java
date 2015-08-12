@@ -30,6 +30,7 @@ import org.json.JSONException;
 
 import com.verigreen.collector.api.BranchDescriptor;
 import com.verigreen.collector.api.VerificationStatus;
+import com.verigreen.collector.buildverification.JenkinsUpdater;
 import com.verigreen.collector.common.CommitItemUtils;
 import com.verigreen.collector.common.VerigreenNeededLogic;
 import com.verigreen.collector.common.log4j.VerigreenLogger;
@@ -40,11 +41,13 @@ import com.verigreen.common.concurrency.RuntimeUtils;
 
 @Path("/branches")
 public class BranchResource {
-
+	
 	@POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response post(BranchDescriptor branch, @QueryParam("password") String password) {
+
+
+	public Response post(BranchDescriptor branch, @QueryParam("password") String password) {
     	CommitItem commitItem = null;
     	if (password == null || password.isEmpty()){
     		commitItem = findCommitItem(branch);
@@ -73,7 +76,9 @@ public class BranchResource {
         			return Response.status(Status.CREATED).entity(branch.toString()).build();
         		}
         	}
+    		
         	return Response.status(Status.UNAUTHORIZED).entity(branch.toString()).build();
+        	
     	}
     }
     
@@ -124,7 +129,7 @@ public class BranchResource {
         	  break;
           }
         }
-		return localCommitItem;
+    	return localCommitItem;
 	}
 	
 	private String getHashedPassword(String password) {

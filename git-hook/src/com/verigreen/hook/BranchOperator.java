@@ -27,8 +27,8 @@ import com.verigreen.common.utils.StringUtils;
 import com.verigreen.restclient.RestClientImpl;
 import com.verigreen.restclient.RestClientResponse;
 import com.verigreen.restclient.common.RestClientException;
-
 public class BranchOperator {
+
     
     public int processBranch(String repository, String oldrev, String newrev, String ref) {
         
