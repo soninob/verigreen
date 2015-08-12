@@ -29,6 +29,7 @@ import com.verigreen.common.jbosscache.CacheInstance;
 import com.verigreen.common.logger.Logger;
 import com.verigreen.common.spring.SpringContextHolder;
 import com.verigreen.jgit.SourceControlOperator;
+import com.verigreen.rest.JenkinsCallRequest;
 
 public class CollectorApi {
     

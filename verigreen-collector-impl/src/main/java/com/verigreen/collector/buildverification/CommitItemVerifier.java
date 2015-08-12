@@ -124,7 +124,7 @@ public class CommitItemVerifier {
                     
                     @Override
                     public BuildVerificationResult call() {
-                        
+                 
                         BuildVerificationResult result =
                                 CollectorApi.getJenkinsVerifier().BuildAndVerify(
                                         CollectorApi.getVerificationJobName(),
