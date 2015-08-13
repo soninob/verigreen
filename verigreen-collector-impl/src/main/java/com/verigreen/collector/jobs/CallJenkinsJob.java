@@ -7,6 +7,7 @@ import org.quartz.JobExecutionException;
 
 import com.verigreen.collector.buildverification.JenkinsUpdater;
 import com.verigreen.collector.common.VerigreenNeededLogic;
+import com.verigreen.restclient.Request;
 import com.verigreen.restclient.RestClientImpl;
 import com.verigreen.restclient.RestClientResponse;
 import com.verigreen.spring.common.CollectorApi;
@@ -29,23 +30,34 @@ public class CallJenkinsJob implements Job {
 	}
 
 	private void calllingJenkinsForCreate() {
+		String branchName = null;
 		
-		
+		new RestClientImpl().post((Request) createPostRestCall(branchName));
 		
 		
 	}
-
-	private RestClientResponse createRestCall() {
+	
+	private RestClientResponse createPostRestCall(String param) {
 		String jenkinsUrl = VerigreenNeededLogic.properties.getProperty("jenkins.url");
 		String jobName = VerigreenNeededLogic.properties.getProperty("jenkins.jobName");
-		String formatOutput ="json?pretty=true&depth=2&tree=builds[number,result]";
+		String formatOutput ="/build";
 		
-		RestClientResponse result = new RestClientImpl().get(CollectorApi.getJenkinsCallRequest(jenkinsUrl, jobName, formatOutput));
+		RestClientResponse result = new RestClientImpl().get(CollectorApi.getJenkinsCallRequest(jenkinsUrl, jobName, param));
+		return result;
+	}
+
+	private RestClientResponse createRestCall(String param) {
+		String jenkinsUrl = VerigreenNeededLogic.properties.getProperty("jenkins.url");
+		String jobName = VerigreenNeededLogic.properties.getProperty("jenkins.jobName");
+		
+		RestClientResponse result = new RestClientImpl().get(CollectorApi.getJenkinsCallRequest(jenkinsUrl, jobName, param));
 		return result;
 	}
 
 	private void calllingJenkinsForUpdate() {
-		RestClientResponse resultingJson = createRestCall();
+		String formatOutput ="json?pretty=true&depth=2&tree=builds[number,result]";
+		
+		RestClientResponse resultingJson = createRestCall(formatOutput);
 		String jsonString = resultingJson.toString();
 		System.out.println("#########################################################################");
 		System.out.println(jsonString);

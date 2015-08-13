@@ -124,8 +124,8 @@ public class JenkinsVerifier implements BuildVerifier {
                 if (callback != null) {
                     callback.buildStarted(new URI(_build.getUrl()), _build.getNumber());
                 }
-                /*CommitItem obs = getCurrentCommitItem(branchName);
-                jenkinsUpdater.register(obs);*/
+                CommitItem obs = getCurrentCommitItem(branchName);
+                jenkinsUpdater.register(obs);
                 waitForCompletion(job2Verify, branchName);
                 BuildWithDetails buildDetails = getDetailsWithRetry(_build);
                 boolean isStillBuilding = buildDetails.isBuilding();

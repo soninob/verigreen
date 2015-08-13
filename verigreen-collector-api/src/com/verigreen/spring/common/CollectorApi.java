@@ -60,11 +60,25 @@ public class CollectorApi {
         
         return RuntimeUtils.cast(getBean(
                 "jenkinsCallRequest",
-                getCollectorAddress(),
                 jenkinsUrl,
                 jobName,
                 formatOutput));
     }
+    
+    public JenkinsCallRequest getPostJenkinsCallRequest(
+    		String jenkinsUrl,
+            String jobName,
+            String branchName,
+            String formatOutput
+            ) {
+       
+       return RuntimeUtils.cast(getBean(
+               "postJenkinsCallRequest",
+               jenkinsUrl,
+               jobName,
+               branchName,
+               formatOutput));
+   }
     
     public static VerigreenNeededRequest getPostVerigreenNeededRequest(String commitId) {
         
