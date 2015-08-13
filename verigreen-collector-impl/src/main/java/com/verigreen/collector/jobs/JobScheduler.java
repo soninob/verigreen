@@ -12,8 +12,6 @@
  *******************************************************************************/
 package com.verigreen.collector.jobs;
 
-import java.util.List;
-
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -24,9 +22,7 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
 
-import com.verigreen.collector.buildverification.JenkinsUpdater;
 import com.verigreen.collector.common.log4j.VerigreenLogger;
-import com.verigreen.collector.observer.Observer;
 
 public class JobScheduler {
     

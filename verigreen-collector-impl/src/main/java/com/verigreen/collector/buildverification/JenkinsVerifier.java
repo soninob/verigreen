@@ -20,9 +20,6 @@ import java.util.Map;
 
 import org.joda.time.DateTime;
 import org.joda.time.Seconds;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 
 import com.google.common.collect.ImmutableMap;
 import com.offbytwo.jenkins.JenkinsServer;
@@ -43,9 +40,6 @@ import com.verigreen.common.utils.RetriableOperationExecutor;
 import com.verigreen.common.utils.StringUtils;
 import com.verigreen.common.utils.RetriableOperationExecutor.RetriableOperation;
 
-
-@Configuration
-@ComponentScan("com.verigreen.collector.buildverification")
 public class JenkinsVerifier implements BuildVerifier {
     
     private Build _build;
@@ -53,12 +47,12 @@ public class JenkinsVerifier implements BuildVerifier {
     private int _sleepTimeForNextBuildNumberInSeconds;
     private int _sleepTimeForBuildProcessInSeconds;
     
-    JenkinsUpdater jenkinsUpdater;
-    
     private int DEFAULT_COUNT;
     private int INITIAL_SLEEP_MILLIS;
     private int MAX_SLEEP_TIME;
 	
+    JenkinsUpdater jenkinsUpdater = new JenkinsUpdater();
+    
     public int getDEFAULT_COUNT() {
 		return DEFAULT_COUNT;
 	}
@@ -94,8 +88,7 @@ public class JenkinsVerifier implements BuildVerifier {
     		}
     	}
 		return null;
-    }  
-    
+    }
     @Override
     public BuildVerificationResult BuildAndVerify(
             String jobName,
@@ -115,7 +108,7 @@ public class JenkinsVerifier implements BuildVerifier {
             
             Job job2Verify = jobs.get(jobName.toLowerCase());
             Map<String,String> commitParams = VerigreenNeededLogic.checkJenkinsMode(getCurrentCommitItem(branchName));
-            
+
             ImmutableMap.Builder<String, String> finalJenkinsParams =
                     ImmutableMap.<String, String>builder()
                 .put(parameterNameForJob, branchName);
@@ -124,22 +117,33 @@ public class JenkinsVerifier implements BuildVerifier {
             	finalJenkinsParams.put(key,commitParams.get(key));
             }
              final ImmutableMap<String, String> params = finalJenkinsParams.build();
+
             boolean started =
                     triggerBuildAndWaitToStart(job2Verify, params, parameterNameForJob, branchName);
-            
-            
-            CommitItem currentItem = getCurrentCommitItem(branchName);
-            jenkinsUpdater.register(currentItem);
             if (started) {
                 if (callback != null) {
                     callback.buildStarted(new URI(_build.getUrl()), _build.getNumber());
-           
-
-                
-           jenkinsUpdater.getBuildVerificationResultForBuild(ret, _build, branchName, jobName, job2Verify);
+                }
+                /*CommitItem obs = getCurrentCommitItem(branchName);
+                jenkinsUpdater.register(obs);*/
+                waitForCompletion(job2Verify, branchName);
+                BuildWithDetails buildDetails = getDetailsWithRetry(_build);
+                boolean isStillBuilding = buildDetails.isBuilding();
+                ret =
+                        new BuildVerificationResult(buildDetails.getNumber(), new URI(
+                                buildDetails.getUrl()), getBuildResult(
+                                buildDetails,
+                                isStillBuilding));
+                VerigreenLogger.get().log(
+                        getClass().getName(),
+                        RuntimeUtils.getCurrentMethodName(),
+                        String.format(
+                                "Build (%d) for branch (%s) has finished with %s",
+                                _build.getNumber(),
+                                branchName,
+                                ret.getStatus()));
             }
-          }
-         } catch (Throwable e) {
+        } catch (Throwable e) {
             VerigreenLogger.get().error(
                     getClass().getName(),
                     RuntimeUtils.getCurrentMethodName(),
@@ -208,7 +212,7 @@ public class JenkinsVerifier implements BuildVerifier {
 		VerigreenNeededLogic.VerigreenMap.put("_jobName", jobName);
 	}
 
-    void waitForCompletion(Job job2Verify, String branchName) throws IOException,
+    private void waitForCompletion(Job job2Verify, String branchName) throws IOException,
             InterruptedException {
         
         VerigreenLogger.get().log(
@@ -310,7 +314,7 @@ public class JenkinsVerifier implements BuildVerifier {
         return ret;
     }
     
-    BuildWithDetails getDetailsWithRetry(final Build currBuild) {
+    private BuildWithDetails getDetailsWithRetry(final Build currBuild) {
         
         return RetriableOperationExecutor.execute(new RetriableOperation<BuildWithDetails>() {
             
@@ -368,11 +372,10 @@ public class JenkinsVerifier implements BuildVerifier {
         return Seconds.secondsBetween(new DateTime(buildStartTime), new DateTime(currentTime)).getSeconds() > _timeoutForBuildInSeconds;
     }
     
-    VerificationStatus getBuildResult(BuildWithDetails buildDetails, boolean isStillBuilding) {
+    private VerificationStatus getBuildResult(BuildWithDetails buildDetails, boolean isStillBuilding) {
         
         return buildDetails.getResult() == com.offbytwo.jenkins.model.BuildResult.SUCCESS
                 ? VerificationStatus.PASSED
                 : isStillBuilding ? VerificationStatus.TIMEOUT : VerificationStatus.FAILED;
     }
 }
-
