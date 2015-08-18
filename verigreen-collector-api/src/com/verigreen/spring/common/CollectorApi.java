@@ -58,9 +58,8 @@ public class CollectorApi {
              String jobName,
              String formatOutput) {
         
-        return RuntimeUtils.cast(getBean(
+    	return RuntimeUtils.cast(getBean(
                 "jenkinsCallRequest",
-                getCollectorAddress(),
                 jenkinsUrl,
                 jobName,
                 formatOutput));

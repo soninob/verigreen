@@ -17,7 +17,7 @@ import com.verigreen.restclient.Request;
 
 public class JenkinsCallRequest extends Request {
     
-    private final static String request = "/job";
+    private final static String request = "job";
     
     public JenkinsCallRequest(
             String jenkinsUrl,
@@ -25,7 +25,7 @@ public class JenkinsCallRequest extends Request {
             String formatOutput
             ) throws UnsupportedEncodingException {
         
-    	super(jenkinsUrl + request +"/"+jobName+"/"+formatOutput);        
+    	super(jenkinsUrl + request + '/' + jobName + '/' + formatOutput);      
     }
     
 }
