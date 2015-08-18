@@ -5,9 +5,10 @@ import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+import com.verigreen.collector.buildverification.CommitItemVerifier;
 import com.verigreen.collector.buildverification.JenkinsUpdater;
+import com.verigreen.collector.buildverification.JenkinsVerifier;
 import com.verigreen.collector.common.VerigreenNeededLogic;
-import com.verigreen.restclient.Request;
 import com.verigreen.restclient.RestClientImpl;
 import com.verigreen.restclient.RestClientResponse;
 import com.verigreen.spring.common.CollectorApi;
@@ -19,8 +20,8 @@ public class CallJenkinsJob implements Job {
 	@Override
 	public void execute(JobExecutionContext context)
 			throws JobExecutionException {
-		calllingJenkinsForUpdate();
 		calllingJenkinsForCreate();
+		calllingJenkinsForUpdate();
 		calllingJenkinsForCancel();
 	}
 
@@ -30,20 +31,13 @@ public class CallJenkinsJob implements Job {
 	}
 
 	private void calllingJenkinsForCreate() {
-		String branchName = null;
 		
-		new RestClientImpl().post((Request) createPostRestCall(branchName));
-		
-		
-	}
-	
-	private RestClientResponse createPostRestCall(String param) {
-		String jenkinsUrl = VerigreenNeededLogic.properties.getProperty("jenkins.url");
-		String jobName = VerigreenNeededLogic.properties.getProperty("jenkins.jobName");
-		String formatOutput ="/build";
-		
-		RestClientResponse result = new RestClientImpl().get(CollectorApi.getJenkinsCallRequest(jenkinsUrl, jobName, param));
-		return result;
+		for( int i = 0; i < CommitItemVerifier.createCommitItems.size(); i++) {
+			
+	          JenkinsVerifier.triggerJob(CommitItemVerifier.createCommitItems.get(i));
+	          CommitItemVerifier.createCommitItems.remove(i);
+			
+		}
 	}
 
 	private RestClientResponse createRestCall(String param) {

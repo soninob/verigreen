@@ -89,6 +89,26 @@ public class JenkinsVerifier implements BuildVerifier {
     	}
 		return null;
     }
+    
+    public static void triggerJob(CommitItem commitItem) {
+    	 String branchName = commitItem.getMergedBranchName(); 
+    	 Map<String, Job> jobs = null;
+		try {
+			 jobs = CollectorApi.getJenkinsServer().getJobs();
+	         Job job2Verify = jobs.get(CollectorApi.getVerificationJobName().toLowerCase());
+			 Map<String,String> commitParams = VerigreenNeededLogic.checkJenkinsMode(commitItem);
+			 ImmutableMap.Builder<String, String> finalJenkinsParams = ImmutableMap.<String, String>builder().put(CollectorApi.getBranchParamName(), branchName);
+	         for(String key : commitParams.keySet())
+	         {
+	         	finalJenkinsParams.put(key,commitParams.get(key));
+	         }
+	          final ImmutableMap<String, String> params = finalJenkinsParams.build();
+	          job2Verify.build(params);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    }
+    
     @Override
     public BuildVerificationResult BuildAndVerify(
             String jobName,
@@ -330,7 +350,7 @@ public class JenkinsVerifier implements BuildVerifier {
         }, INITIAL_SLEEP_MILLIS, MAX_SLEEP_TIME, DEFAULT_COUNT, CollectorException.class);
     }
     
-    private Map<String, Job> getJobsWithRetry() throws IOException {
+    public Map<String, Job> getJobsWithRetry() throws IOException {
         
         return RetriableOperationExecutor.execute(new RetriableOperation<Map<String, Job>>() {
             

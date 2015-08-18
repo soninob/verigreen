@@ -28,15 +28,5 @@ public class JenkinsCallRequest extends Request {
     	super(jenkinsUrl + request +"/"+jobName+"/"+formatOutput);        
     }
     
-    public JenkinsCallRequest(
-    		String jenkinsUrl,
-            String jobName,
-            String branchName,
-            String formatOutput
-            ) throws UnsupportedEncodingException {
-    	
-    	super(jenkinsUrl + request +"/"+jobName+"/"+formatOutput+"/"+branchName);
-    }
-    
 }
 
