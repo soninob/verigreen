@@ -15,13 +15,16 @@ package com.verigreen.collector.model;
 import java.net.URI;
 import java.util.Date;
 
+import org.springframework.stereotype.Component;
+
 import com.verigreen.collector.api.BranchDescriptor;
 import com.verigreen.collector.api.VerificationStatus;
+import com.verigreen.collector.observer.Observer;
 import com.verigreen.collector.spring.CollectorApi;
 import com.verigreen.common.jbosscache.entity.UUIDEntity;
 import com.verigreen.common.utils.LocalMachineCurrentTimeProvider;
-
-public class CommitItem extends UUIDEntity implements Comparable<CommitItem> {
+@Component
+public class CommitItem extends UUIDEntity implements Comparable<CommitItem>, Observer {
     
     private static final long serialVersionUID = -500692221789722476L;
     
@@ -196,7 +199,28 @@ public class CommitItem extends UUIDEntity implements Comparable<CommitItem> {
         
         return _creationTime.compareTo(item.getCreationTime());
     }
+	
+	@Override
+	public void updateBuildNumber(int build) {
+		
+		this.setBuildNumber(build);
+		
+	}
+	
+	@Override
+	public void updateBuildUrl(URI buildUrl) {
+		
+		this.setBuildUrl(buildUrl);
+		
+	}
     
+	@Override
+	public void update(VerificationStatus status) {
+		
+		this.setStatus(status);
+		
+	}
+	
     @Override
     public String toString() {
         
@@ -213,4 +237,6 @@ public class CommitItem extends UUIDEntity implements Comparable<CommitItem> {
                 _parent != null ? _parent.getKey() : null,
                 _child != null ? _child.getKey() : null);
     }
+
+	
 }

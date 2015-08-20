@@ -13,6 +13,8 @@
 package com.verigreen.collector.buildverification;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -32,23 +34,27 @@ public class CommitItemVerifier {
     private int _timeoutInMillis;
     private int _pollTimeMillis = 10 * 1000;
     private String _commitItemKey = StringUtils.EMPTY_STRING;
+    public static List<CommitItem> createCommitItems = new ArrayList<>();
     
     public void verify(final CommitItem item) {
         
-        _commitItemKey = item.getKey();
+       /*_commitItemKey = item.getKey();
         final Future<BuildVerificationResult> future =
-                verifyAsync("origin/" + item.getMergedBranchName());
-        ExecutorServiceFactory.fireAndForget(new Runnable() {
+                verifyAsync("origin/" + item.getMergedBranchName());*/
+        
+        createCommitItems.add(item);
+        
+        /*ExecutorServiceFactory.fireAndForget(new Runnable() {
             
             @Override
             public void run() {
                 
                 waitForResult(future);
             }
-        });
+        });*/
     }
-    
-    public void cancel() {
+ 
+	public void cancel() {
         
         _canceled = true;
         if (!StringUtils.isNullOrEmpty(_commitItemKey)) {
@@ -124,7 +130,7 @@ public class CommitItemVerifier {
                     
                     @Override
                     public BuildVerificationResult call() {
-                        
+                 
                         BuildVerificationResult result =
                                 CollectorApi.getJenkinsVerifier().BuildAndVerify(
                                         CollectorApi.getVerificationJobName(),
