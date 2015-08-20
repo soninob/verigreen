@@ -25,7 +25,7 @@ public class JenkinsCallRequest extends Request {
             String formatOutput
             ) throws UnsupportedEncodingException {
         
-    	super(jenkinsUrl + request +"/"+jobName+"/"+formatOutput);        
+    	super(jenkinsUrl + request + '/' + jobName + '/' + formatOutput);      
     }
     
 }

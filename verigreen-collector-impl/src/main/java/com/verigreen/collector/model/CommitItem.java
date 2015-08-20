@@ -199,6 +199,20 @@ public class CommitItem extends UUIDEntity implements Comparable<CommitItem>, Ob
         
         return _creationTime.compareTo(item.getCreationTime());
     }
+	
+	@Override
+	public void updateBuildNumber(int build) {
+		
+		this.setBuildNumber(build);
+		
+	}
+	
+	@Override
+	public void updateBuildUrl(URI buildUrl) {
+		
+		this.setBuildUrl(buildUrl);
+		
+	}
     
 	@Override
 	public void update(VerificationStatus status) {

@@ -34,11 +34,11 @@ public class CommitItemVerifier {
     private int _timeoutInMillis;
     private int _pollTimeMillis = 10 * 1000;
     private String _commitItemKey = StringUtils.EMPTY_STRING;
-    public static List<CommitItem> createCommitItems = new ArrayList<CommitItem>();
+    public static List<CommitItem> createCommitItems = new ArrayList<>();
     
     public void verify(final CommitItem item) {
         
-       /* _commitItemKey = item.getKey();
+       /*_commitItemKey = item.getKey();
         final Future<BuildVerificationResult> future =
                 verifyAsync("origin/" + item.getMergedBranchName());*/
         

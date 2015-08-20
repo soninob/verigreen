@@ -50,8 +50,9 @@ public class JenkinsVerifier implements BuildVerifier {
     private int DEFAULT_COUNT;
     private int INITIAL_SLEEP_MILLIS;
     private int MAX_SLEEP_TIME;
-	
-    JenkinsUpdater jenkinsUpdater = new JenkinsUpdater();
+
+    JenkinsUpdater jenkinsUpdater = JenkinsUpdater.getInstance();
+
     
     public int getDEFAULT_COUNT() {
 		return DEFAULT_COUNT;
@@ -89,6 +90,7 @@ public class JenkinsVerifier implements BuildVerifier {
     	}
 		return null;
     }
+
     
     public static void triggerJob(CommitItem commitItem) {
     	 String branchName = commitItem.getMergedBranchName(); 
@@ -146,6 +148,7 @@ public class JenkinsVerifier implements BuildVerifier {
                 }
                 CommitItem obs = getCurrentCommitItem(branchName);
                 jenkinsUpdater.register(obs);
+
                 waitForCompletion(job2Verify, branchName);
                 BuildWithDetails buildDetails = getDetailsWithRetry(_build);
                 boolean isStillBuilding = buildDetails.isBuilding();
@@ -162,6 +165,7 @@ public class JenkinsVerifier implements BuildVerifier {
                                 _build.getNumber(),
                                 branchName,
                                 ret.getStatus()));
+
             }
         } catch (Throwable e) {
             VerigreenLogger.get().error(

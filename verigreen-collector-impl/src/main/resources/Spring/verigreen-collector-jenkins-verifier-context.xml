@@ -35,9 +35,5 @@ See the License for the specific language governing permissions and limitations 
 		 scope="singleton">
 	</bean>
 	
-	<bean id="jenkinsUpdater" class="com.verigreen.collector.buildverification.JenkinsUpdater"
-		scope="singleton">
-	</bean>
-	
 </beans>
 	
