@@ -107,8 +107,34 @@ public class JenkinsVerifier implements BuildVerifier {
 	          final ImmutableMap<String, String> params = finalJenkinsParams.build();
 	          job2Verify.build(params);
 		} catch (IOException e) {
-			e.printStackTrace();
+			VerigreenLogger.get().error(
+                    JenkinsVerifier.class.getName(),
+                    RuntimeUtils.getCurrentMethodName(),
+                    String.format(
+                            "Failed to trigger build for job [%s] with branch [%s]",
+                            CollectorApi.getVerificationJobName(),
+                            branchName),e);
 		}
+    }
+    
+    public static String getBuildUrl(int buildNumber) {
+		
+    	Map<String, Job> jobs = null;
+    	String buildUrl = null;
+		try {
+			jobs = CollectorApi.getJenkinsServer().getJobs();
+			Job job2Verify = jobs.get(CollectorApi.getVerificationJobName().toLowerCase());
+			buildUrl = job2Verify.details().getBuildByNumber(buildNumber).getUrl();
+			} catch (IOException e) {
+				VerigreenLogger.get().error(
+	                    JenkinsVerifier.class.getName(),
+	                    RuntimeUtils.getCurrentMethodName(),
+	                    String.format(
+	                            "Failed to retriev build URL"),e);
+			}
+    	
+    	return buildUrl;
+    	
     }
     
     @Override

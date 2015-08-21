@@ -34,7 +34,19 @@ public class CommitItemVerifier {
     private int _timeoutInMillis;
     private int _pollTimeMillis = 10 * 1000;
     private String _commitItemKey = StringUtils.EMPTY_STRING;
-    public static List<CommitItem> createCommitItems = new ArrayList<>();
+    private List<CommitItem> createCommitItems = new ArrayList<>();
+    private static CommitItemVerifier instance = null;
+    
+	protected CommitItemVerifier() {
+	      // Exists only to defeat instantiation.
+	}
+	
+	public static CommitItemVerifier getInstance() {
+		if(instance == null) {
+			instance = new CommitItemVerifier();
+	    }
+	    return instance;
+	}
     
     public void verify(final CommitItem item) {
         
@@ -53,6 +65,10 @@ public class CommitItemVerifier {
             }
         });*/
     }
+    
+    public List<CommitItem> getCommitItems(){
+		return this.createCommitItems;
+	}
  
 	public void cancel() {
         

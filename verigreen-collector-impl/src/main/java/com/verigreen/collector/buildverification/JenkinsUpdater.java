@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.verigreen.collector.api.VerificationStatus;
-import com.verigreen.collector.common.VerigreenNeededLogic;
 import com.verigreen.collector.common.log4j.VerigreenLogger;
 import com.verigreen.collector.model.CommitItem;
 import com.verigreen.collector.observer.Observer;
@@ -81,9 +80,15 @@ public class JenkinsUpdater implements Subject {
 				List<String> result = results.get(((CommitItem)observer).getMergedBranchName());
 				observer.updateBuildNumber(Integer.parseInt(result.get(0)));
 				try {
-					observer.updateBuildUrl(new URI(VerigreenNeededLogic.properties.getProperty("jenkins.url")+"job/"+VerigreenNeededLogic.properties.getProperty("jenkins.jobName")+"/"+result.get(0)+"/"));
+					observer.updateBuildUrl(new URI(JenkinsVerifier.getBuildUrl(Integer.parseInt(result.get(0)))));
 				} catch (URISyntaxException e) {
-					e.printStackTrace();
+					VerigreenLogger.get().error(
+		                    getClass().getName(),
+		                    RuntimeUtils.getCurrentMethodName(),
+		                    String.format(
+		                            "Illegal character in build URL: [%s]",
+		                            JenkinsVerifier.getBuildUrl(Integer.parseInt(result.get(0)))),
+		                    e);
 				}
 				observer.update(_verificationStatusesMap.get(result.get(1)));
 				notifiedObservers.add(observer);
