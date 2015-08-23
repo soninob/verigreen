@@ -93,11 +93,15 @@ public class JenkinsVerifier implements BuildVerifier {
 
     
     public static void triggerJob(CommitItem commitItem) {
+    	
     	 String branchName = commitItem.getMergedBranchName(); 
     	 Map<String, Job> jobs = null;
 		try {
 			 jobs = CollectorApi.getJenkinsServer().getJobs();
 	         Job job2Verify = jobs.get(CollectorApi.getVerificationJobName().toLowerCase());
+	         VerigreenLogger.get().log(RuntimeUtils.class.getName(),
+	        		 RuntimeUtils.getCurrentMethodName(),
+	        		 String.format("Triggering job [%s] for branch [%s]", job2Verify.getName(), branchName));
 			 Map<String,String> commitParams = VerigreenNeededLogic.checkJenkinsMode(commitItem);
 			 ImmutableMap.Builder<String, String> finalJenkinsParams = ImmutableMap.<String, String>builder().put(CollectorApi.getBranchParamName(), branchName);
 	         for(String key : commitParams.keySet())

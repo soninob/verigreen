@@ -74,7 +74,7 @@ public class JenkinsUpdater implements Subject {
 
 	@Override
 	public void notifyObserver(List<Observer> relevantObservers, Map <String, List<String>> results) {
-		List<Observer> notifiedObservers = new ArrayList<Observer>();
+		List<CommitItem> notifiedObservers = new ArrayList<CommitItem>();
 		for(Observer observer : relevantObservers)
 		{
 				List<String> result = results.get(((CommitItem)observer).getMergedBranchName());
@@ -91,7 +91,7 @@ public class JenkinsUpdater implements Subject {
 		                    e);
 				}
 				observer.update(_verificationStatusesMap.get(result.get(1)));
-				notifiedObservers.add(observer);
+				notifiedObservers.add((CommitItem)observer);
 				unregister(observer);
 				VerigreenLogger.get().log(
 			             getClass().getName(),
@@ -103,8 +103,8 @@ public class JenkinsUpdater implements Subject {
 	
 		}
 		
-		CollectorApi.getCommitItemContainer().save((CommitItem) notifiedObservers);
-		notifiedObservers = null;
+		CollectorApi.getCommitItemContainer().save(notifiedObservers);
+		notifiedObservers.clear();
 		
 	}
 	

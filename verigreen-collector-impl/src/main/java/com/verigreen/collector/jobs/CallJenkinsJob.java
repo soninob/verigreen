@@ -48,54 +48,62 @@ public class CallJenkinsJob implements Job {
 	}
 
 	private void calllingJenkinsForCreate() {
+		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
 		
-		for( int i = 0; i < CommitItemVerifier.createCommitItems.size(); i++) {
+		int listSize = CommitItemVerifier.getInstance().getCommitItems().size();
+		for( int i = 0; i < listSize; i++) {
 			
-	          JenkinsVerifier.triggerJob(CommitItemVerifier.createCommitItems.get(i));
-	          jenkinsUpdater.register(CommitItemVerifier.createCommitItems.get(i));
+	          JenkinsVerifier.triggerJob(CommitItemVerifier.getInstance().getCommitItems().get(i));
+	          jenkinsUpdater.register(CommitItemVerifier.getInstance().getCommitItems().get(i));
 	          
 		}
 		
-		CommitItemVerifier.createCommitItems.clear();
+		CommitItemVerifier.getInstance().getCommitItems().clear();
+		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 	}
 
 	private RestClientResponse createRestCall(String param) {
+		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
 		String jenkinsUrl = VerigreenNeededLogic.properties.getProperty("jenkins.url");
 		String jobName = VerigreenNeededLogic.properties.getProperty("jenkins.jobName");
 		
 		RestClientResponse result = new RestClientImpl().get(CollectorApi.getJenkinsCallRequest(jenkinsUrl, jobName, param));
+		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 		return result;
 	}
 
 	private void calllingJenkinsForUpdate() {
 
-			RestClientResponse response = createRestCall("api/json?depth=1&pretty=true&tree=builds[number,result,building,timestamp,actions[parameters[value]]]");
-			String result = response.getEntity(String.class);
+		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
+		RestClientResponse response = createRestCall("api/json?depth=1&pretty=true&tree=builds[number,result,building,timestamp,actions[parameters[value]]]");
+		String result = response.getEntity(String.class);
+		
+		try {
+			Map<String, List<String>> parsedResults = parsingJSON(result);
+		
+			List<Observer> analyzedResults = analyzeResults(parsedResults);
 			
-			try {
-				Map<String, List<String>> parsedResults = parsingJSON(result);
-			
-				List<Observer> analyzedResults = analyzeResults(parsedResults);
-				
-				VerigreenLogger.get().log(
-			             getClass().getName(),
-			             RuntimeUtils.getCurrentMethodName(),
-			             String.format(
-			                     "Jenkins called for update on [%s] not updated items...",
-			                     analyzedResults.size()));
+			VerigreenLogger.get().log(
+		             getClass().getName(),
+		             RuntimeUtils.getCurrentMethodName(),
+		             String.format(
+		                     "Jenkins called for update on [%s] not updated items...",
+		                     analyzedResults.size()));
 
-				if(!analyzedResults.isEmpty())
-				{
-					jenkinsUpdater.notifyObserver(analyzedResults, parsedResults);
-				}
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}		
+			if(!analyzedResults.isEmpty())
+			{
+				jenkinsUpdater.notifyObserver(analyzedResults, parsedResults);
+			}
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 	
 	}
-	private Map<String, List<String>> parsingJSON(String json) throws JSONException
-	{	
+	private Map<String, List<String>> parsingJSON(String json) throws JSONException {
+		
+		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
 		Map<String, List<String>> buildsAndStatusesMap = new HashMap<String, List<String>>();
 		JsonParser parser = new JsonParser();
 		JsonObject mainJson = (JsonObject) parser.parse(json);
@@ -113,7 +121,7 @@ public class CallJenkinsJob implements Job {
 				 values.add(buildNumber);
 				 values.add(jenkinsResult);
 				 
-				 String timestamp = childJsonObject.get("timestamp").getAsString();
+//				 String timestamp = childJsonObject.get("timestamp").getAsString();
 						 
 				 //buildsAndStatusesMap.put(buildNumber,jenkinsResult);
 				 
@@ -143,21 +151,29 @@ public class CallJenkinsJob implements Job {
 					 }*/		
 				 
 		}
+		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 		return buildsAndStatusesMap;
 	}
 
 	
-	private List<Observer> analyzeResults(Map<String, List<String>> parsedResults)
-	{
+	private List<Observer> analyzeResults(Map<String, List<String>> parsedResults){
+		
+		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
 		List<Observer> observers =  jenkinsUpdater.getObservers();
 		List<Observer> relevantObservers = new ArrayList<Observer>();
 		for(Observer observer : observers)
 		{
-			if(!parsedResults.get(((CommitItem)observer).getMergedBranchName()).equals("null"))
-			{
-				relevantObservers.add(observer);
+			try {	
+				if(!parsedResults.get(((CommitItem)observer).getMergedBranchName()).equals("null"))
+				{
+					relevantObservers.add(observer);
+				}
+			}
+			catch (NullPointerException e){ //means that the update didn't get details of the new create.
+				continue;
 			}
 		}
+		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 		return relevantObservers;
 	}
 
