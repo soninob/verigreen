@@ -149,6 +149,26 @@ public class JenkinsVerifier implements BuildVerifier {
     	
     }
     
+ public static String getBuildUrl(int buildNumber) {
+	 Map<String, Job> jobs = null;
+
+    	String buildUrl = null;
+		try {
+			jobs = CollectorApi.getJenkinsServer().getJobs();
+		    Job job2Verify = jobs.get(CollectorApi.getVerificationJobName().toLowerCase());
+			buildUrl = job2Verify.details().getBuildByNumber(buildNumber).getUrl();
+			} catch (IOException e) {
+				VerigreenLogger.get().error(
+	                    JenkinsVerifier.class.getName(),
+	                    RuntimeUtils.getCurrentMethodName(),
+	                    String.format(
+	                            "Failed to retrieve build URL"),e);
+			}
+    	
+    	return buildUrl;
+    	
+    }
+    
     @Override
     public BuildVerificationResult BuildAndVerify(
             String jobName,
