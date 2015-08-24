@@ -36,8 +36,8 @@ public class CallJenkinsJob implements Job {
 	public void execute(JobExecutionContext context)
 			throws JobExecutionException {
 
-		calllingJenkinsForCreate();
 		calllingJenkinsForUpdate();
+		calllingJenkinsForCreate();
 		calllingJenkinsForCancel();
 
 	}
@@ -75,21 +75,26 @@ public class CallJenkinsJob implements Job {
 	private void calllingJenkinsForUpdate() {
 
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
+		int sizeObservers = jenkinsUpdater.getObservers().size();
+		VerigreenLogger.get().log(
+	             getClass().getName(),
+	             RuntimeUtils.getCurrentMethodName(),
+	             String.format(
+	                     "Jenkins called for update on [%s] not updated items...",
+	                     sizeObservers ));
+		
+		
 		RestClientResponse response = createRestCall("api/json?depth=1&pretty=true&tree=builds[number,result,building,timestamp,actions[parameters[value]]]");
 		String result = response.getEntity(String.class);
 		
+		
+
 		try {
 			Map<String, List<String>> parsedResults = parsingJSON(result);
 		
 			List<Observer> analyzedResults = analyzeResults(parsedResults);
 			
-			VerigreenLogger.get().log(
-		             getClass().getName(),
-		             RuntimeUtils.getCurrentMethodName(),
-		             String.format(
-		                     "Jenkins called for update on [%s] not updated items...",
-		                     analyzedResults.size()));
-
+			
 			if(!analyzedResults.isEmpty())
 			{
 				jenkinsUpdater.notifyObserver(analyzedResults, parsedResults);

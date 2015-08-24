@@ -14,6 +14,7 @@ package com.verigreen.collector.buildverification;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
@@ -110,6 +111,13 @@ public class JenkinsVerifier implements BuildVerifier {
 	         }
 	          final ImmutableMap<String, String> params = finalJenkinsParams.build();
 	          job2Verify.build(params);
+	          String url = JenkinsVerifier.getBuildUrl(commitItem.getBuildNumber());
+	          commitItem.setBuildUrl(new URI(url));
+	          VerigreenLogger.get().log(RuntimeUtils.class.getName(),
+		        		 RuntimeUtils.getCurrentMethodName(),
+		        		 String.format("Set build url [%s] for item: [%s]", url, commitItem.toString()));
+	          
+	       
 		} catch (IOException e) {
 			VerigreenLogger.get().error(
                     JenkinsVerifier.class.getName(),
@@ -118,6 +126,9 @@ public class JenkinsVerifier implements BuildVerifier {
                             "Failed to trigger build for job [%s] with branch [%s]",
                             CollectorApi.getVerificationJobName(),
                             branchName),e);
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
     }
     
@@ -134,7 +145,7 @@ public class JenkinsVerifier implements BuildVerifier {
 	                    JenkinsVerifier.class.getName(),
 	                    RuntimeUtils.getCurrentMethodName(),
 	                    String.format(
-	                            "Failed to retriev build URL"),e);
+	                            "Failed to retrieve build URL"),e);
 			}
     	
     	return buildUrl;

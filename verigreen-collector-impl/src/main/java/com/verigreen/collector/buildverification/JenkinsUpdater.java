@@ -18,34 +18,35 @@ import com.verigreen.common.concurrency.RuntimeUtils;
 public class JenkinsUpdater implements Subject {
 
 	private ArrayList<Observer> observers = new ArrayList<>();
-	private Map<Integer,BuildVerificationResult> resultsMap = new HashMap<Integer, BuildVerificationResult>();
-	
 	private static final Map<String,VerificationStatus> _verificationStatusesMap;
     static
     {
     	_verificationStatusesMap = new HashMap<String, VerificationStatus>();
     	_verificationStatusesMap.put("SUCCESS", VerificationStatus.PASSED);
     	_verificationStatusesMap.put("ABORTED", VerificationStatus.FAILED);
+    	_verificationStatusesMap.put("", VerificationStatus.RUNNING);
     }
-	
-	 private static JenkinsUpdater instance = null;
-	   protected JenkinsUpdater() {
-	      // Exists only to defeat instantiation.
-	   }
-	   public static JenkinsUpdater getInstance() {
-	      if(instance == null) {
-	         instance = new JenkinsUpdater();
-	      }
-	      return instance;
-	   }
-	
+    
+    private static volatile JenkinsUpdater _instance; 
+    
+    
+    public static JenkinsUpdater getInstance()
+    { 
+    	if(_instance == null)
+    	{
+    		synchronized(JenkinsUpdater.class)
+    		{ 
+    			if(_instance == null)
+    			{ 
+    				_instance = new JenkinsUpdater();  
+    			}
+    		}
+    	}
+    return _instance; 
+    }
+
 	public List<Observer> getObservers(){
 		return this.observers;
-	}
-	
-	public void addBuildVerificationResultToMap(BuildVerificationResult result)
-	{
-		resultsMap.put(result.getBuildNumber(), result);
 	}
 
 	@Override
