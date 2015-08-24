@@ -111,7 +111,7 @@ public class JenkinsVerifier implements BuildVerifier {
 	         }
 	          final ImmutableMap<String, String> params = finalJenkinsParams.build();
 	          job2Verify.build(params);
-	          String url = JenkinsVerifier.getBuildUrl(commitItem.getBuildNumber());
+	          String url = JenkinsVerifier.getBuildUrl(job2Verify, commitItem.getBuildNumber());
 	          commitItem.setBuildUrl(new URI(url));
 	          VerigreenLogger.get().log(RuntimeUtils.class.getName(),
 		        		 RuntimeUtils.getCurrentMethodName(),
@@ -132,13 +132,10 @@ public class JenkinsVerifier implements BuildVerifier {
 		}
     }
     
-    public static String getBuildUrl(int buildNumber) {
+    public static String getBuildUrl(Job job2Verify, int buildNumber) {
 		
-    	Map<String, Job> jobs = null;
     	String buildUrl = null;
 		try {
-			jobs = CollectorApi.getJenkinsServer().getJobs();
-			Job job2Verify = jobs.get(CollectorApi.getVerificationJobName().toLowerCase());
 			buildUrl = job2Verify.details().getBuildByNumber(buildNumber).getUrl();
 			} catch (IOException e) {
 				VerigreenLogger.get().error(
