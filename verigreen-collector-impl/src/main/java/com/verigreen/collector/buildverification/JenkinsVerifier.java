@@ -14,7 +14,6 @@ package com.verigreen.collector.buildverification;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;

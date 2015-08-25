@@ -105,7 +105,7 @@ public class CallJenkinsJob implements Job {
 			}
 		}
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
-	
+		
 	}
 	private Map<String, List<String>> parsingJSON(String json) throws JSONException {
 		
@@ -122,7 +122,6 @@ public class CallJenkinsJob implements Job {
 				 JsonObject childJsonObject = (JsonObject) jsonBuildsArray.get(i);
 				 String buildNumber = childJsonObject.get("number").getAsString();
 				 Object jenkinsResult = childJsonObject.get("result");
-				 
 				 List<String> values = new ArrayList<>();
 				 values.add(buildNumber);
 				 if(jenkinsResult==null)
@@ -130,7 +129,7 @@ public class CallJenkinsJob implements Job {
 					 values.add("null");
 				 }
 				 else{
-				 values.add(jenkinsResult.toString());
+					 values.add(jenkinsResult.toString().replace("\"", ""));
 				 }
 //				 String timestamp = childJsonObject.get("timestamp").getAsString();
 						 
