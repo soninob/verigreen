@@ -24,7 +24,7 @@ public class JenkinsUpdater implements Subject {
     	_verificationStatusesMap = new HashMap<String, VerificationStatus>();
     	_verificationStatusesMap.put("SUCCESS", VerificationStatus.PASSED);
     	_verificationStatusesMap.put("ABORTED", VerificationStatus.FAILED);
-    	_verificationStatusesMap.put("", VerificationStatus.RUNNING);
+    	_verificationStatusesMap.put("null", VerificationStatus.RUNNING);
     }
     
     private static volatile JenkinsUpdater _instance; 

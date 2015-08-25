@@ -82,26 +82,27 @@ public class CallJenkinsJob implements Job {
 	             String.format(
 	                     "Jenkins called for update on [%s] not updated items...",
 	                     sizeObservers ));
-		
-		
-		RestClientResponse response = createRestCall("api/json?depth=1&pretty=true&tree=builds[number,result,building,timestamp,actions[parameters[value]]]");
-		String result = response.getEntity(String.class);
-		
-		
-
-		try {
-			Map<String, List<String>> parsedResults = parsingJSON(result);
-		
-			List<Observer> analyzedResults = analyzeResults(parsedResults);
+		if(sizeObservers != 0)
+		{
+				RestClientResponse response = createRestCall("api/json?depth=1&pretty=true&tree=builds[number,result,building,timestamp,actions[parameters[value]]]");
+				String result = response.getEntity(String.class);
 			
 			
-			if(!analyzedResults.isEmpty())
-			{
-				jenkinsUpdater.notifyObserver(analyzedResults, parsedResults);
+	
+			try {
+				Map<String, List<String>> parsedResults = parsingJSON(result);
+			
+				List<Observer> analyzedResults = analyzeResults(parsedResults);
+				
+				
+				if(!analyzedResults.isEmpty())
+				{
+					jenkinsUpdater.notifyObserver(analyzedResults, parsedResults);
+				}
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();	
 			}
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 	
@@ -120,12 +121,17 @@ public class CallJenkinsJob implements Job {
 		{  // **line 2**
 				 JsonObject childJsonObject = (JsonObject) jsonBuildsArray.get(i);
 				 String buildNumber = childJsonObject.get("number").getAsString();
-				 String jenkinsResult = childJsonObject.get("result").getAsString();
+				 Object jenkinsResult = childJsonObject.get("result");
 				 
 				 List<String> values = new ArrayList<>();
 				 values.add(buildNumber);
-				 values.add(jenkinsResult);
-				 
+				 if(jenkinsResult==null)
+				 {
+					 values.add("null");
+				 }
+				 else{
+				 values.add(jenkinsResult.toString());
+				 }
 //				 String timestamp = childJsonObject.get("timestamp").getAsString();
 						 
 				 //buildsAndStatusesMap.put(buildNumber,jenkinsResult);
