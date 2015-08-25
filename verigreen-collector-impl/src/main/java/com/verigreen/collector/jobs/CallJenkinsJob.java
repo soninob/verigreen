@@ -55,10 +55,11 @@ public class CallJenkinsJob implements Job {
 			
 	          JenkinsVerifier.triggerJob(CommitItemVerifier.getInstance().getCommitItems().get(i));
 	          jenkinsUpdater.register(CommitItemVerifier.getInstance().getCommitItems().get(i));
+	  		  CommitItemVerifier.getInstance().getCommitItems().remove(i);
 	          
 		}
 		
-		CommitItemVerifier.getInstance().getCommitItems().clear();
+
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 	}
 
