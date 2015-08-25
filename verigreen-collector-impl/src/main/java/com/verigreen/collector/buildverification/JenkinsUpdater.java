@@ -93,7 +93,11 @@ public class JenkinsUpdater implements Subject {
 				}
 				observer.update(_verificationStatusesMap.get(result.get(1)));
 				notifiedObservers.add((CommitItem)observer);
-				unregister(observer);
+				
+				if(!((CommitItem)observer).getStatus().equals(VerificationStatus.RUNNING))
+				{
+					unregister(observer);
+				}
 				VerigreenLogger.get().log(
 			             getClass().getName(),
 			             RuntimeUtils.getCurrentMethodName(),
