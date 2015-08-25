@@ -14,7 +14,6 @@ package com.verigreen.collector.buildverification;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
@@ -38,8 +37,8 @@ import com.verigreen.collector.spring.CollectorApi;
 import com.verigreen.common.concurrency.RuntimeUtils;
 import com.verigreen.common.utils.LocalMachineCurrentTimeProvider;
 import com.verigreen.common.utils.RetriableOperationExecutor;
-import com.verigreen.common.utils.StringUtils;
 import com.verigreen.common.utils.RetriableOperationExecutor.RetriableOperation;
+import com.verigreen.common.utils.StringUtils;
 
 public class JenkinsVerifier implements BuildVerifier {
     

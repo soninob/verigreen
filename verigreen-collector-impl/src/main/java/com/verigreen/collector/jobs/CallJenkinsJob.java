@@ -20,6 +20,7 @@ import com.verigreen.collector.buildverification.JenkinsVerifier;
 import com.verigreen.collector.common.VerigreenNeededLogic;
 import com.verigreen.collector.common.log4j.VerigreenLogger;
 import com.verigreen.collector.model.CommitItem;
+import com.verigreen.collector.model.MinJenkinsJob;
 import com.verigreen.collector.observer.Observer;
 import com.verigreen.common.concurrency.RuntimeUtils;
 import com.verigreen.restclient.RestClientImpl;
@@ -90,14 +91,15 @@ public class CallJenkinsJob implements Job {
 		
 
 		try {
-			Map<String, List<String>> parsedResults = parsingJSON(result);
+			Map<String, MinJenkinsJob> parsedResults = parsingJSON(result);
 		
 			List<Observer> analyzedResults = analyzeResults(parsedResults);
 			
 			
 			if(!analyzedResults.isEmpty())
 			{
-				jenkinsUpdater.notifyObserver(analyzedResults, parsedResults);
+				/*jenkinsUpdater.notifyObserver(analyzedResults, parsedResults);*/
+				jenkinsUpdater.notifyObserver(jenkinsUpdater.calculateRelevantObservers(analyzedResults, parsedResults));
 			}
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
@@ -106,10 +108,10 @@ public class CallJenkinsJob implements Job {
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 	
 	}
-	private Map<String, List<String>> parsingJSON(String json) throws JSONException {
+	private Map<String, MinJenkinsJob> parsingJSON(String json) throws JSONException {
 		
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
-		Map<String, List<String>> buildsAndStatusesMap = new HashMap<String, List<String>>();
+		Map<String, MinJenkinsJob> buildsAndStatusesMap = new HashMap<String, MinJenkinsJob>();
 		JsonParser parser = new JsonParser();
 		JsonObject mainJson = (JsonObject) parser.parse(json);
 		
@@ -122,9 +124,9 @@ public class CallJenkinsJob implements Job {
 				 String buildNumber = childJsonObject.get("number").getAsString();
 				 String jenkinsResult = childJsonObject.get("result").getAsString();
 				 
-				 List<String> values = new ArrayList<>();
-				 values.add(buildNumber);
-				 values.add(jenkinsResult);
+				 MinJenkinsJob values = new MinJenkinsJob();
+				 values.setBuildNumber(buildNumber);
+				 values.setJenkinsResult(jenkinsResult);
 				 
 //				 String timestamp = childJsonObject.get("timestamp").getAsString();
 						 
@@ -142,9 +144,9 @@ public class CallJenkinsJob implements Job {
 				 
 				 JsonObject parameterJsonObject = (JsonObject) jsonParametersArray.get(0);
 				 
-				 String branch = parameterJsonObject.get("value").getAsString();
+				 values.setBranchName(parameterJsonObject.get("value").getAsString());
 				 
-				 buildsAndStatusesMap.put(branch, values);
+				 buildsAndStatusesMap.put(values.getBranchName(), values);
 				 
 					 
 					 /*if(parameterJsonObject.get("name").getAsString().equals("status"))
@@ -161,7 +163,7 @@ public class CallJenkinsJob implements Job {
 	}
 
 	
-	private List<Observer> analyzeResults(Map<String, List<String>> parsedResults){
+	private List<Observer> analyzeResults(Map<String, MinJenkinsJob> parsedResults){
 		
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
 		List<Observer> observers =  jenkinsUpdater.getObservers();
