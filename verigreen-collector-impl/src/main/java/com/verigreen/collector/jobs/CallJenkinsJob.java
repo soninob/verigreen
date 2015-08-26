@@ -56,8 +56,7 @@ public class CallJenkinsJob implements Job {
 			
 	          JenkinsVerifier.triggerJob(CommitItemVerifier.getInstance().getCommitItems().get(i));
 	          jenkinsUpdater.register(CommitItemVerifier.getInstance().getCommitItems().get(i));
-	  		  CommitItemVerifier.getInstance().getCommitItems().remove(i);
-	          
+	  		  CommitItemVerifier.getInstance().getCommitItems().remove(i);          
 		}
 		
 
@@ -123,11 +122,18 @@ public class CallJenkinsJob implements Job {
 		{  // **line 2**
 				 JsonObject childJsonObject = (JsonObject) jsonBuildsArray.get(i);
 				 String buildNumber = childJsonObject.get("number").getAsString();
-				 String jenkinsResult = childJsonObject.get("result").getAsString();
+				 Object jenkinsResult = childJsonObject.get("result");
 				 
 				 MinJenkinsJob values = new MinJenkinsJob();
 				 values.setBuildNumber(buildNumber);
-				 values.setJenkinsResult(jenkinsResult);
+				 if(jenkinsResult == null)
+				 {
+					 values.setJenkinsResult("null");
+				 }
+				 else{
+					 values.setJenkinsResult(jenkinsResult.toString().replace("\"",""));
+				 }
+				 
 				 
 //				 String timestamp = childJsonObject.get("timestamp").getAsString();
 						 
