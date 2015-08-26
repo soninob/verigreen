@@ -44,6 +44,7 @@ public class CommitItem extends UUIDEntity implements Comparable<CommitItem>, Ob
     private int _buildNumber;
     private boolean _isDone = false;
     private String _childCommit = "";
+    private boolean triggeredAttempt = false;
     
     public CommitItem() {}
     
@@ -217,6 +218,14 @@ public class CommitItem extends UUIDEntity implements Comparable<CommitItem>, Ob
 		
 		this.setStatus(status);
 		
+	}
+	
+	public boolean isTriggeredAttempt() {
+		return triggeredAttempt;
+	}
+	
+	public void setTriggeredAttempt(boolean triggeredAttempt) {
+		this.triggeredAttempt = triggeredAttempt;
 	}
 	
     @Override

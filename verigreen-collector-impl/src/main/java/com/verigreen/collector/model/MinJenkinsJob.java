@@ -19,7 +19,6 @@ public class MinJenkinsJob {
 	private String jenkinsResult;
 	private String branchName;
 	
-	
 	public String getBuildNumber() {
 		return buildNumber;
 	}
@@ -38,6 +37,4 @@ public class MinJenkinsJob {
 	public void setBranchName(String branchName) {
 		this.branchName = branchName;
 	}
-	
-	
 }

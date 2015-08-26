@@ -56,10 +56,9 @@ public class CallJenkinsJob implements Job {
 			
 	          JenkinsVerifier.triggerJob(CommitItemVerifier.getInstance().getCommitItems().get(i));
 	          jenkinsUpdater.register(CommitItemVerifier.getInstance().getCommitItems().get(i));
-	          
 		}
-		
-		CommitItemVerifier.getInstance().getCommitItems().clear();
+
+		removeTriggeredCommits();
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 	}
 
@@ -75,6 +74,7 @@ public class CallJenkinsJob implements Job {
 
 	private void calllingJenkinsForUpdate() {
 
+		String result;
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
 		int sizeObservers = jenkinsUpdater.getObservers().size();
 		VerigreenLogger.get().log(
@@ -84,27 +84,30 @@ public class CallJenkinsJob implements Job {
 	                     "Jenkins called for update on [%s] not updated items...",
 	                     sizeObservers ));
 		
-		
-		RestClientResponse response = createRestCall("api/json?depth=1&pretty=true&tree=builds[number,result,building,timestamp,actions[parameters[value]]]");
-		String result = response.getEntity(String.class);
+		if (sizeObservers > 0){
+			RestClientResponse response = createRestCall("api/json?depth=1&pretty=true&tree=builds[number,result,building,timestamp,actions[parameters[value]]]");
+			result = response.getEntity(String.class);
+			try {
+				Map<String, MinJenkinsJob> parsedResults = parsingJSON(result);
+				
+				List<Observer> analyzedResults = analyzeResults(parsedResults);
+				
+				
+				if(!analyzedResults.isEmpty())
+				{
+					/*jenkinsUpdater.notifyObserver(analyzedResults, parsedResults);*/
+					jenkinsUpdater.notifyObserver(jenkinsUpdater.calculateRelevantObservers(analyzedResults, parsedResults));
+				}
+			} catch (JSONException e) {
+				VerigreenLogger.get().error(
+			             getClass().getName(),
+			             RuntimeUtils.getCurrentMethodName(),
+			             "Bad JSON response: " + result);//for security reasons - remove the result from the exception.
+			}
+		}
 		
 		
 
-		try {
-			Map<String, MinJenkinsJob> parsedResults = parsingJSON(result);
-		
-			List<Observer> analyzedResults = analyzeResults(parsedResults);
-			
-			
-			if(!analyzedResults.isEmpty())
-			{
-				/*jenkinsUpdater.notifyObserver(analyzedResults, parsedResults);*/
-				jenkinsUpdater.notifyObserver(jenkinsUpdater.calculateRelevantObservers(analyzedResults, parsedResults));
-			}
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 	
 	}
@@ -184,5 +187,19 @@ public class CallJenkinsJob implements Job {
 		return relevantObservers;
 	}
 
+	/**
+	 * Removing commits that already been triggered
+	 * It is used to block one thread clearing the entire list while another thread updates it without triggering yet
+	 */
+	private void removeTriggeredCommits(){
+		int listSize = CommitItemVerifier.getInstance().getCommitItems().size();
+		
+		for (int i = 0; i < listSize; i++){
+			if (CommitItemVerifier.getInstance().getCommitItems().get(i).isTriggeredAttempt()){
+				CommitItemVerifier.getInstance().getCommitItems().remove(i--);
+				listSize--;
+			}
+		}
+	}
 	
 }

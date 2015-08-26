@@ -41,13 +41,6 @@ public class CommitItemVerifier {
 	      // Exists only to defeat instantiation.
 	}
 	
-	/*public static CommitItemVerifier getInstance() {
-		if(instance == null) {
-			instance = new CommitItemVerifier();
-	    }
-	    return instance;
-	}*/
-	
 	public static CommitItemVerifier getInstance()
     { 
     	if(instance == null)
