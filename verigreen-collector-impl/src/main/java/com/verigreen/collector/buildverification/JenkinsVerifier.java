@@ -51,6 +51,8 @@ public class JenkinsVerifier implements BuildVerifier {
     private int INITIAL_SLEEP_MILLIS;
     private int MAX_SLEEP_TIME;
 
+    private static Job job2Verify = getJobToVerify();
+    
     JenkinsUpdater jenkinsUpdater = JenkinsUpdater.getInstance();
 
     
@@ -77,6 +79,19 @@ public class JenkinsVerifier implements BuildVerifier {
 	public void setMAX_SLEEP_TIME(int mAX_SLEEP_TIME) {
 		MAX_SLEEP_TIME = mAX_SLEEP_TIME;
 	}
+	private static Job getJobToVerify()
+	{
+		try {
+			return CollectorApi.getJenkinsServer().getJob((CollectorApi.getVerificationJobName().toLowerCase()));
+		} catch (IOException e) {
+			VerigreenLogger.get().error(
+                    JenkinsVerifier.class.getName(),
+                    RuntimeUtils.getCurrentMethodName(),
+                    String.format(
+                            "Failed get job for verification"),e);
+		}
+		return null;
+	}
     private CommitItem getCurrentCommitItem(String branchName)
     {
     	List<CommitItem> all = CollectorApi.getCommitItemContainer().getAll();
@@ -90,15 +105,11 @@ public class JenkinsVerifier implements BuildVerifier {
     	}
 		return null;
     }
-
     
     public static void triggerJob(CommitItem commitItem) {
     	
-    	 String branchName = commitItem.getMergedBranchName(); 
-    	 Map<String, Job> jobs = null;
+    	String branchName = commitItem.getMergedBranchName(); 
 		try {
-			 jobs = CollectorApi.getJenkinsServer().getJobs();
-	         Job job2Verify = jobs.get(CollectorApi.getVerificationJobName().toLowerCase());
 	         VerigreenLogger.get().log(RuntimeUtils.class.getName(),
 	        		 RuntimeUtils.getCurrentMethodName(),
 	        		 String.format("Triggering job [%s] for branch [%s]", job2Verify.getName(), branchName));
@@ -109,6 +120,7 @@ public class JenkinsVerifier implements BuildVerifier {
 	         	finalJenkinsParams.put(key,commitParams.get(key));
 	         }
 	          final ImmutableMap<String, String> params = finalJenkinsParams.build();
+	          
 	          job2Verify.build(params);
 	         
 		} catch (IOException e) {
@@ -124,12 +136,9 @@ public class JenkinsVerifier implements BuildVerifier {
 
     
  public static String getBuildUrl(int buildNumber) {
-	 Map<String, Job> jobs = null;
 
     	String buildUrl = null;
 		try {
-			jobs = CollectorApi.getJenkinsServer().getJobs();
-		    Job job2Verify = jobs.get(CollectorApi.getVerificationJobName().toLowerCase());
 			buildUrl = job2Verify.details().getBuildByNumber(buildNumber).getUrl();
 			} catch (IOException e) {
 				VerigreenLogger.get().error(

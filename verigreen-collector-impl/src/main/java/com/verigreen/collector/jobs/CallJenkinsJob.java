@@ -2,6 +2,7 @@ package com.verigreen.collector.jobs;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -51,14 +52,15 @@ public class CallJenkinsJob implements Job {
 	private void calllingJenkinsForCreate() {
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
 		
-		int listSize = CommitItemVerifier.getInstance().getCommitItems().size();
-		for( int i = 0; i < listSize; i++) {
-			
-	          JenkinsVerifier.triggerJob(CommitItemVerifier.getInstance().getCommitItems().get(i));
-	          jenkinsUpdater.register(CommitItemVerifier.getInstance().getCommitItems().get(i));
+		//int listSize = CommitItemVerifier.getInstance().getCommitItems().size();
+		
+		for (Iterator<CommitItem> iterator = CommitItemVerifier.getInstance().getCommitItems().iterator(); iterator.hasNext();) {
+			CommitItem ci = iterator.next();
+			JenkinsVerifier.triggerJob(ci);
+			jenkinsUpdater.register(ci);
+			// Remove the current element from the iterator and the list.
+	        iterator.remove();
 		}
-
-		removeTriggeredCommits();
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 	}
 
@@ -106,10 +108,8 @@ public class CallJenkinsJob implements Job {
 			}
 		}
 		
-		
-
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
-	
+		
 	}
 	private Map<String, MinJenkinsJob> parsingJSON(String json) throws JSONException {
 		
@@ -125,11 +125,18 @@ public class CallJenkinsJob implements Job {
 		{  // **line 2**
 				 JsonObject childJsonObject = (JsonObject) jsonBuildsArray.get(i);
 				 String buildNumber = childJsonObject.get("number").getAsString();
-				 String jenkinsResult = childJsonObject.get("result").getAsString();
+				 Object jenkinsResult = childJsonObject.get("result");
 				 
 				 MinJenkinsJob values = new MinJenkinsJob();
 				 values.setBuildNumber(buildNumber);
-				 values.setJenkinsResult(jenkinsResult);
+				 if(jenkinsResult == null)
+				 {
+					 values.setJenkinsResult("null");
+				 }
+				 else{
+					 values.setJenkinsResult(jenkinsResult.toString().replace("\"",""));
+				 }
+				 
 				 
 //				 String timestamp = childJsonObject.get("timestamp").getAsString();
 						 
@@ -186,20 +193,4 @@ public class CallJenkinsJob implements Job {
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 		return relevantObservers;
 	}
-
-	/**
-	 * Removing commits that already been triggered
-	 * It is used to block one thread clearing the entire list while another thread updates it without triggering yet
-	 */
-	private void removeTriggeredCommits(){
-		int listSize = CommitItemVerifier.getInstance().getCommitItems().size();
-		
-		for (int i = 0; i < listSize; i++){
-			if (CommitItemVerifier.getInstance().getCommitItems().get(i).isTriggeredAttempt()){
-				CommitItemVerifier.getInstance().getCommitItems().remove(i--);
-				listSize--;
-			}
-		}
-	}
-	
 }

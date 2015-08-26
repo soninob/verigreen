@@ -27,7 +27,7 @@ public class JenkinsUpdater implements Subject {
     	_verificationStatusesMap = new HashMap<String, VerificationStatus>();
     	_verificationStatusesMap.put("SUCCESS", VerificationStatus.PASSED);
     	_verificationStatusesMap.put("ABORTED", VerificationStatus.FAILED);
-    	_verificationStatusesMap.put("", VerificationStatus.RUNNING);
+    	_verificationStatusesMap.put("null", VerificationStatus.RUNNING);
     }
     
     
@@ -109,7 +109,10 @@ public class JenkinsUpdater implements Subject {
 		for(Observer observer : relevantObservers){
 			
 			notifiedObservers.add((CommitItem)observer);
-			unregister(observer);
+			if(!((CommitItem)observer).getStatus().equals(VerificationStatus.RUNNING))
+			{
+				unregister(observer);
+			}
 			VerigreenLogger.get().log(
 		             getClass().getName(),
 		             RuntimeUtils.getCurrentMethodName(),
@@ -137,7 +140,11 @@ public class JenkinsUpdater implements Subject {
 				}
 				observer.update(_verificationStatusesMap.get(result.get(1)));
 				notifiedObservers.add((CommitItem)observer);
-				unregister(observer);
+				
+				if(!((CommitItem)observer).getStatus().equals(VerificationStatus.RUNNING))
+				{
+					unregister(observer);
+				}
 				VerigreenLogger.get().log(
 			             getClass().getName(),
 			             RuntimeUtils.getCurrentMethodName(),
