@@ -37,8 +37,8 @@ import com.verigreen.collector.spring.CollectorApi;
 import com.verigreen.common.concurrency.RuntimeUtils;
 import com.verigreen.common.utils.LocalMachineCurrentTimeProvider;
 import com.verigreen.common.utils.RetriableOperationExecutor;
-import com.verigreen.common.utils.StringUtils;
 import com.verigreen.common.utils.RetriableOperationExecutor.RetriableOperation;
+import com.verigreen.common.utils.StringUtils;
 
 public class JenkinsVerifier implements BuildVerifier {
     

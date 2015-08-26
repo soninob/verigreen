@@ -20,6 +20,7 @@ import com.verigreen.collector.buildverification.JenkinsVerifier;
 import com.verigreen.collector.common.VerigreenNeededLogic;
 import com.verigreen.collector.common.log4j.VerigreenLogger;
 import com.verigreen.collector.model.CommitItem;
+import com.verigreen.collector.model.MinJenkinsJob;
 import com.verigreen.collector.observer.Observer;
 import com.verigreen.common.concurrency.RuntimeUtils;
 import com.verigreen.restclient.RestClientImpl;
@@ -83,22 +84,22 @@ public class CallJenkinsJob implements Job {
 	             String.format(
 	                     "Jenkins called for update on [%s] not updated items...",
 	                     sizeObservers ));
+
 		if(sizeObservers != 0)
 		{
 				RestClientResponse response = createRestCall("api/json?depth=1&pretty=true&tree=builds[number,result,building,timestamp,actions[parameters[value]]]");
 				String result = response.getEntity(String.class);
-			
-			
-	
-			try {
-				Map<String, List<String>> parsedResults = parsingJSON(result);
-			
-				List<Observer> analyzedResults = analyzeResults(parsedResults);
-				
+		
+		
+
+		try {
+			Map<String, MinJenkinsJob> parsedResults = parsingJSON(result);
+		
+			List<Observer> analyzedResults = analyzeResults(parsedResults);
 				
 				if(!analyzedResults.isEmpty())
 				{
-					jenkinsUpdater.notifyObserver(analyzedResults, parsedResults);
+					jenkinsUpdater.notifyObserver(jenkinsUpdater.calculateRelevantObservers(analyzedResults, parsedResults));
 				}
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
@@ -108,10 +109,10 @@ public class CallJenkinsJob implements Job {
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 		
 	}
-	private Map<String, List<String>> parsingJSON(String json) throws JSONException {
+	private Map<String, MinJenkinsJob> parsingJSON(String json) throws JSONException {
 		
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
-		Map<String, List<String>> buildsAndStatusesMap = new HashMap<String, List<String>>();
+		Map<String, MinJenkinsJob> buildsAndStatusesMap = new HashMap<String, MinJenkinsJob>();
 		JsonParser parser = new JsonParser();
 		JsonObject mainJson = (JsonObject) parser.parse(json);
 		
@@ -122,16 +123,12 @@ public class CallJenkinsJob implements Job {
 		{  // **line 2**
 				 JsonObject childJsonObject = (JsonObject) jsonBuildsArray.get(i);
 				 String buildNumber = childJsonObject.get("number").getAsString();
-				 Object jenkinsResult = childJsonObject.get("result");
-				 List<String> values = new ArrayList<>();
-				 values.add(buildNumber);
-				 if(jenkinsResult==null)
-				 {
-					 values.add("null");
-				 }
-				 else{
-					 values.add(jenkinsResult.toString().replace("\"", ""));
-				 }
+				 String jenkinsResult = childJsonObject.get("result").getAsString();
+				 
+				 MinJenkinsJob values = new MinJenkinsJob();
+				 values.setBuildNumber(buildNumber);
+				 values.setJenkinsResult(jenkinsResult);
+				 
 //				 String timestamp = childJsonObject.get("timestamp").getAsString();
 						 
 				 //buildsAndStatusesMap.put(buildNumber,jenkinsResult);
@@ -148,9 +145,9 @@ public class CallJenkinsJob implements Job {
 				 
 				 JsonObject parameterJsonObject = (JsonObject) jsonParametersArray.get(0);
 				 
-				 String branch = parameterJsonObject.get("value").getAsString();
+				 values.setBranchName(parameterJsonObject.get("value").getAsString());
 				 
-				 buildsAndStatusesMap.put(branch, values);
+				 buildsAndStatusesMap.put(values.getBranchName(), values);
 				 
 					 
 					 /*if(parameterJsonObject.get("name").getAsString().equals("status"))
@@ -167,7 +164,7 @@ public class CallJenkinsJob implements Job {
 	}
 
 	
-	private List<Observer> analyzeResults(Map<String, List<String>> parsedResults){
+	private List<Observer> analyzeResults(Map<String, MinJenkinsJob> parsedResults){
 		
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
 		List<Observer> observers =  jenkinsUpdater.getObservers();
