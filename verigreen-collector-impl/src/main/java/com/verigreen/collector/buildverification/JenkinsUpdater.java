@@ -92,7 +92,8 @@ public class JenkinsUpdater implements Subject {
 	                            JenkinsVerifier.getBuildUrl(Integer.parseInt(result.getBuildNumber()))),
 	                    e);
 			}
-			observer.update(_verificationStatusesMap.get(result.getJenkinsResult()));
+			((CommitItem)observer).setStatus(_verificationStatusesMap.get(result.getJenkinsResult()));
+			observer.update();
 			notifiedObservers.add(observer);
 			/*unregister(observer);*/
 			
@@ -122,6 +123,7 @@ public class JenkinsUpdater implements Subject {
 		}
 		
 		CollectorApi.getCommitItemContainer().save(notifiedObservers);
+
 		/*List<CommitItem> notifiedObservers = new ArrayList<CommitItem>();
 		for(Observer observer : relevantObservers)
 		{
@@ -154,9 +156,9 @@ public class JenkinsUpdater implements Subject {
 			
 	
 		}
-		
+		notifiedObservers.clear();
 		CollectorApi.getCommitItemContainer().save(notifiedObservers);
-		notifiedObservers.clear();*/
+		;*/
 		
 	}
 	

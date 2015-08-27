@@ -123,8 +123,11 @@ public class JenkinsVerifier implements BuildVerifier {
 	          final ImmutableMap<String, String> params = finalJenkinsParams.build();
 	          
 	          job2Verify.build(params);
+	          
+	          commitItem.setTriggeredAttempt(true);
 	         
 		} catch (IOException e) {
+		
 			VerigreenLogger.get().error(
                     JenkinsVerifier.class.getName(),
                     RuntimeUtils.getCurrentMethodName(),

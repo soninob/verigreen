@@ -12,6 +12,7 @@ import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+import com.verigreen.collector.api.VerificationStatus;
 import com.verigreen.collector.buildverification.CommitItemVerifier;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -32,6 +33,9 @@ import com.verigreen.spring.common.CollectorApi;
 public class CallJenkinsJob implements Job {
 
 	JenkinsUpdater jenkinsUpdater = JenkinsUpdater.getInstance();
+	private int _maximumRetries = getNumberOfRetriesCounter();
+	private int _maximumTimeout = getTriggerTimeoutCounter();
+	
 	
 	public CallJenkinsJob(){}
 	@Override
@@ -41,7 +45,6 @@ public class CallJenkinsJob implements Job {
 		calllingJenkinsForUpdate();
 		calllingJenkinsForCreate();
 		calllingJenkinsForCancel();
-
 	}
 
 	private void calllingJenkinsForCancel() {
@@ -49,6 +52,19 @@ public class CallJenkinsJob implements Job {
 		
 	}
 
+	private int getTriggerTimeoutCounter()
+	{
+		int counter = Integer.parseInt(VerigreenNeededLogic.properties.getProperty("timeout.counter"));
+		return counter;
+
+	}
+	
+	private int getNumberOfRetriesCounter()
+	{
+		int counterRetries = Integer.parseInt(VerigreenNeededLogic.properties.getProperty("default_count"));
+		return counterRetries;
+	}
+	
 	private void calllingJenkinsForCreate() {
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
 		
@@ -171,7 +187,66 @@ public class CallJenkinsJob implements Job {
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 		return buildsAndStatusesMap;
 	}
+	private void checkTriggerAndRetryMechanism(Observer observer)
+	{
+		/*TODO check the observer, if the observer (CommitItem) doesn't have _buildnumber 
+		 * then check the parsedResults, and if there is no value calculate timeout.
+		 * this method will do:
+		 * 1) if both counters reaches their limits if so = trigger failed
+		 * 	  if timeoutConter didn't reach the limit then:
+			 * 		++timeoutcounter
+			 * 		change the triggerAtemoted to false
+			 * 		unregister the observer from subject (update)
+			 * 		adding it (commitItem) to the commitItemVerifier list. 
+			 * else
+		 * 			++triggercounter;
+		 * 			timeoutCounter = 0;
+		 * unregister the observer from subject (update)
+			 * 		adding it (commitItem) to the commitItemVerifier list.
+		*/
+		/*if(!parsedResults.get(((CommitItem)observer).getMergedBranchName()).equals("null"))
+		{
+			relevantObservers.add(observer);
+		}*/
+		
+		int retriableCounter = ((CommitItem)observer).getRetriableCounter();
+		int timeoutCounter = ((CommitItem)observer).getTimeoutCounter();
+		
+		
+		if(timeoutCounter >= _maximumTimeout && retriableCounter >= _maximumRetries)
+		{
+			((CommitItem)observer).setStatus(VerificationStatus.TRIGGER_FAILED);
+			observer.update();
+			//TODO modify the update method.
+			/**
+			 * Modified update to save the commit item into the commit item container
+			 * 
+			 * */
+			jenkinsUpdater.unregister(observer);
+			//TODO save the commit item
+		}
+		else if(((CommitItem)observer).getTimeoutCounter() < _maximumTimeout)
+		{
 
+			timeoutCounter++;
+			((CommitItem)observer).setTimeoutCounter(timeoutCounter);
+			
+			((CommitItem)observer).setTriggeredAttempt(false);
+			
+			jenkinsUpdater.unregister(observer);
+			CommitItemVerifier.getInstance().getCommitItems().add((CommitItem)observer);
+		}
+		else{
+
+			retriableCounter++;
+			((CommitItem)observer).setRetriableCounter(retriableCounter);
+			
+			((CommitItem)observer).setTimeoutCounter(0);
+			
+			jenkinsUpdater.unregister(observer);
+			CommitItemVerifier.getInstance().getCommitItems().add((CommitItem)observer);
+		}
+	}
 	
 	private List<Observer> analyzeResults(Map<String, MinJenkinsJob> parsedResults){
 		
@@ -180,8 +255,17 @@ public class CallJenkinsJob implements Job {
 		List<Observer> relevantObservers = new ArrayList<Observer>();
 		for(Observer observer : observers)
 		{
-			try {	
-				if(!parsedResults.get(((CommitItem)observer).getMergedBranchName()).equals("null"))
+			try {
+				//the default build number for an untriggered item is 0
+				if(((CommitItem)observer).getBuildNumber() == 0)
+				{
+					if(parsedResults.get(((CommitItem)observer).getMergedBranchName()) == null)
+					{
+						checkTriggerAndRetryMechanism(observer);
+					}
+					
+				}
+				else if(!parsedResults.get(((CommitItem)observer).getMergedBranchName()).equals("null"))
 				{
 					relevantObservers.add(observer);
 				}
