@@ -81,8 +81,9 @@ public class JenkinsVerifier implements BuildVerifier {
 	}
 	private static Job getJobToVerify()
 	{
+		Job jobToVerify =  null;
 		try {
-			return CollectorApi.getJenkinsServer().getJob((CollectorApi.getVerificationJobName().toLowerCase()));
+			jobToVerify = CollectorApi.getJenkinsServer().getJob((CollectorApi.getVerificationJobName().toLowerCase()));
 		} catch (IOException e) {
 			VerigreenLogger.get().error(
                     JenkinsVerifier.class.getName(),
@@ -90,7 +91,7 @@ public class JenkinsVerifier implements BuildVerifier {
                     String.format(
                             "Failed get job for verification"),e);
 		}
-		return null;
+		return jobToVerify;
 	}
     private CommitItem getCurrentCommitItem(String branchName)
     {
@@ -138,18 +139,9 @@ public class JenkinsVerifier implements BuildVerifier {
  public static String getBuildUrl(int buildNumber) {
 
     	String buildUrl = null;
-		try {
-			buildUrl = job2Verify.details().getBuildByNumber(buildNumber).getUrl();
-			} catch (IOException e) {
-				VerigreenLogger.get().error(
-	                    JenkinsVerifier.class.getName(),
-	                    RuntimeUtils.getCurrentMethodName(),
-	                    String.format(
-	                            "Failed to retrieve build URL"),e);
-			}
+		buildUrl = job2Verify.getUrl()+"/"+Integer.toString(buildNumber)+"/";
     	
     	return buildUrl;
-    	
     }
     
     @Override
