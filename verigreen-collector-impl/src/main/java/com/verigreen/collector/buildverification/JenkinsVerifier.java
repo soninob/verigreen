@@ -137,11 +137,32 @@ public class JenkinsVerifier implements BuildVerifier {
 		} 
     }
 
-    
+ public static void stopBuild(int buildNumber)
+ {
+	 try {
+		Build build = CollectorApi.getJenkinsServer().getJob(CollectorApi.getVerificationJobName()).getBuildByNumber(buildNumber);
+		build.Stop();
+		
+		VerigreenLogger.get().log(RuntimeUtils.class.getName(),
+       		 RuntimeUtils.getCurrentMethodName(),
+       		 String.format("Stopping build [%s] for job [%s] ...", buildNumber, CollectorApi.getVerificationJobName()));
+	} catch (IOException e) {
+		
+		VerigreenLogger.get().error(
+                JenkinsVerifier.class.getName(),
+                RuntimeUtils.getCurrentMethodName(),
+                String.format(
+                        "Failed to stop build [%s] for job [%s]",
+                        buildNumber,
+                        CollectorApi.getVerificationJobName()),e);
+	}
+
+	 
+ }
  public static String getBuildUrl(int buildNumber) {
 
     	String buildUrl = null;
-		buildUrl = job2Verify.getUrl()+"/"+Integer.toString(buildNumber)+"/";
+		buildUrl = job2Verify.getUrl()+Integer.toString(buildNumber)+"/";
     	
     	return buildUrl;
     }

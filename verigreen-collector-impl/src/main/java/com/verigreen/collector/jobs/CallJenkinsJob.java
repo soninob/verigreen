@@ -223,6 +223,7 @@ public class CallJenkinsJob implements Job {
 			 * */
 			observer.update(VerificationStatus.TRIGGER_FAILED);
 			jenkinsUpdater.unregister(observer);
+			JenkinsVerifier.stopBuild(((CommitItem)observer).getBuildNumber());
 			//TODO save the commit item
 		}
 		else if(((CommitItem)observer).getTimeoutCounter() < _maximumTimeout)
@@ -275,6 +276,7 @@ public class CallJenkinsJob implements Job {
 						
 						jenkinsUpdater.unregister(observer);
 						CommitItemVerifier.getInstance().getCommitItems().add((CommitItem)observer);
+						JenkinsVerifier.stopBuild(((CommitItem)observer).getBuildNumber());
 						
 					}	
 					checkTriggerAndRetryMechanism(observer);
