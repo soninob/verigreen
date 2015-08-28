@@ -257,7 +257,7 @@ public class CallJenkinsJob implements Job {
 		{
 			try {
 				//the default build number for an untriggered item is 0
-				if(((CommitItem)observer).getBuildNumber() == 0)
+				if(((CommitItem)observer).getBuildUrl().toString().equals("0"))
 				{
 					if(parsedResults.get(((CommitItem)observer).getMergedBranchName()) == null)
 					{
