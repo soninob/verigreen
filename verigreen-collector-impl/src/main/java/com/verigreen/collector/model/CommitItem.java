@@ -232,9 +232,9 @@ public class CommitItem extends UUIDEntity implements Comparable<CommitItem>, Ob
 	}
     
 	@Override
-	public void update() {
+	public void update(VerificationStatus status) {
 		
-		CollectorApi.getCommitItemContainer().save(this);
+		this.setStatus(status);
 		
 	}
 	

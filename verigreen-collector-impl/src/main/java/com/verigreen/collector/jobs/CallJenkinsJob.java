@@ -215,9 +215,8 @@ public class CallJenkinsJob implements Job {
 		
 		if(timeoutCounter >= _maximumTimeout && retriableCounter >= _maximumRetries)
 		{
-			((CommitItem)observer).setStatus(VerificationStatus.TRIGGER_FAILED);
-			observer.update();
-			//TODO modify the update method.
+			observer.update(VerificationStatus.TRIGGER_FAILED);
+			//TODO modify the update
 			/**
 			 * Modified update to save the commit item into the commit item container
 			 * 
@@ -256,18 +255,20 @@ public class CallJenkinsJob implements Job {
 		for(Observer observer : observers)
 		{
 			try {
-				//the default build number for an untriggered item is 0
-				if(((CommitItem)observer).getBuildUrl().toString().equals("0"))
+				//the default build url for an untriggered item is 0, also check for null value in the parsed results, that means that 
+				//the MinJenkinsJob didn't get any response for that particular commit item 
+				/*if(parsedResults.get(((CommitItem)observer).getMergedBranchName()).equals("null"))
 				{
-					if(parsedResults.get(((CommitItem)observer).getMergedBranchName()) == null)
-					{
-						checkTriggerAndRetryMechanism(observer);
-					}
-					
+					checkTriggerAndRetryMechanism(observer);
 				}
-				else if(!parsedResults.get(((CommitItem)observer).getMergedBranchName()).equals("null"))
+				else */
+				if(!parsedResults.get(((CommitItem)observer).getMergedBranchName()).equals("null"))
 				{
 					relevantObservers.add(observer);
+				}
+				else
+				{
+					checkTriggerAndRetryMechanism(observer);
 				}
 			}
 			catch (NullPointerException e){ //means that the update didn't get details of the new create.

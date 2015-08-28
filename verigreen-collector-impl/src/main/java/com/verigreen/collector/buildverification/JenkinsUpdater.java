@@ -92,8 +92,8 @@ public class JenkinsUpdater implements Subject {
 	                            JenkinsVerifier.getBuildUrl(Integer.parseInt(result.getBuildNumber()))),
 	                    e);
 			}
-			((CommitItem)observer).setStatus(_verificationStatusesMap.get(result.getJenkinsResult()));
-			observer.update();
+
+			observer.update(_verificationStatusesMap.get(result.getJenkinsResult()));
 			notifiedObservers.add(observer);
 			/*unregister(observer);*/
 			
