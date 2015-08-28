@@ -109,7 +109,8 @@ public class JenkinsVerifier implements BuildVerifier {
     
     public static void triggerJob(CommitItem commitItem) {
     	
-    	String branchName = commitItem.getMergedBranchName(); 
+    	String branchName = commitItem.getMergedBranchName();
+
 		try {
 	         VerigreenLogger.get().log(RuntimeUtils.class.getName(),
 	        		 RuntimeUtils.getCurrentMethodName(),
@@ -121,9 +122,7 @@ public class JenkinsVerifier implements BuildVerifier {
 	         	finalJenkinsParams.put(key,commitParams.get(key));
 	         }
 	          final ImmutableMap<String, String> params = finalJenkinsParams.build();
-	          
 	          job2Verify.build(params);
-	          
 	          commitItem.setTriggeredAttempt(true);
 	         
 		} catch (IOException e) {

@@ -12,6 +12,7 @@ import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+import com.offbytwo.jenkins.JenkinsServer;
 import com.verigreen.collector.api.VerificationStatus;
 import com.verigreen.collector.buildverification.CommitItemVerifier;
 import com.google.gson.JsonArray;
@@ -54,14 +55,14 @@ public class CallJenkinsJob implements Job {
 
 	private int getTriggerTimeoutCounter()
 	{
-		int counter = Integer.parseInt(VerigreenNeededLogic.properties.getProperty("timeout.counter"));
-		return counter;
+		int counterTimeout = Integer.parseInt(VerigreenNeededLogic.properties.getProperty("timeout.counter"));
+		return counterTimeout;
 
 	}
 	
 	private int getNumberOfRetriesCounter()
 	{
-		int counterRetries = Integer.parseInt(VerigreenNeededLogic.properties.getProperty("default_count"));
+		int counterRetries = Integer.parseInt(VerigreenNeededLogic.properties.getProperty("retry.counter"));
 		return counterRetries;
 	}
 	
@@ -215,12 +216,12 @@ public class CallJenkinsJob implements Job {
 		
 		if(timeoutCounter >= _maximumTimeout && retriableCounter >= _maximumRetries)
 		{
-			observer.update(VerificationStatus.TRIGGER_FAILED);
-			//TODO modify the update
 			/**
-			 * Modified update to save the commit item into the commit item container
+			 * After the observer is updated, it is saved in the notify observers in the commit item container
+			 * 
 			 * 
 			 * */
+			observer.update(VerificationStatus.TRIGGER_FAILED);
 			jenkinsUpdater.unregister(observer);
 			//TODO save the commit item
 		}
@@ -262,14 +263,27 @@ public class CallJenkinsJob implements Job {
 					checkTriggerAndRetryMechanism(observer);
 				}
 				else */
+				if(((CommitItem)observer).getBuildNumber() < 0)
+				{
+					if(parsedResults.get(((CommitItem)observer).getMergedBranchName()).equals("null"))
+					{
+						int timeoutCounter = ((CommitItem)observer).getTimeoutCounter();
+						timeoutCounter++;
+						((CommitItem)observer).setTimeoutCounter(timeoutCounter);
+						
+						((CommitItem)observer).setTriggeredAttempt(false);
+						
+						jenkinsUpdater.unregister(observer);
+						CommitItemVerifier.getInstance().getCommitItems().add((CommitItem)observer);
+						
+					}	
+					checkTriggerAndRetryMechanism(observer);
+				}
 				if(!parsedResults.get(((CommitItem)observer).getMergedBranchName()).equals("null"))
 				{
 					relevantObservers.add(observer);
 				}
-				else
-				{
-					checkTriggerAndRetryMechanism(observer);
-				}
+			
 			}
 			catch (NullPointerException e){ //means that the update didn't get details of the new create.
 				continue;
