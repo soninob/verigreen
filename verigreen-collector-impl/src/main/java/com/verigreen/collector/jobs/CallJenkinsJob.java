@@ -74,7 +74,7 @@ public class CallJenkinsJob implements Job {
 		for (Iterator<CommitItem> iterator = CommitItemVerifier.getInstance().getCommitItems().iterator(); iterator.hasNext();) {
 			CommitItem ci = iterator.next();
 			JenkinsVerifier.triggerJob(ci);
-			jenkinsUpdater.register(ci);
+			jenkinsUpdater.register(com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().get(ci.getKey()));
 			// Remove the current element from the iterator and the list.
 	        iterator.remove();
 		}
@@ -216,11 +216,6 @@ public class CallJenkinsJob implements Job {
 		
 		if(timeoutCounter >= _maximumTimeout && retriableCounter >= _maximumRetries)
 		{
-			/**
-			 * After the observer is updated, it is saved in the notify observers in the commit item container
-			 * 
-			 * 
-			 * */
 			observer.update(VerificationStatus.TRIGGER_FAILED);
 			jenkinsUpdater.unregister(observer);
 			JenkinsVerifier.stopBuild(((CommitItem)observer).getBuildNumber());
