@@ -116,7 +116,8 @@ public class JenkinsVerifier implements BuildVerifier {
 	        		 RuntimeUtils.getCurrentMethodName(),
 	        		 String.format("Triggering job [%s] for branch [%s]", job2Verify.getName(), branchName));
 			 Map<String,String> commitParams = VerigreenNeededLogic.checkJenkinsMode(commitItem);
-			 ImmutableMap.Builder<String, String> finalJenkinsParams = ImmutableMap.<String, String>builder().put(CollectorApi.getBranchParamName(), branchName);
+			 ImmutableMap.Builder<String, String> finalJenkinsParams = ImmutableMap.<String, String>builder().put("token",VerigreenNeededLogic.properties.getProperty("jenkins.password"));
+			 finalJenkinsParams.put(CollectorApi.getBranchParamName(), branchName);
 	         for(String key : commitParams.keySet())
 	         {
 	         	finalJenkinsParams.put(key,commitParams.get(key));
