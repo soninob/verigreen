@@ -13,6 +13,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.verigreen.collector.api.VerificationStatus;
@@ -35,6 +36,7 @@ public class CallJenkinsJob implements Job {
 	JenkinsUpdater jenkinsUpdater = JenkinsUpdater.getInstance();
 	private int _maximumRetries = getNumberOfRetriesCounter();
 	private int _maximumTimeout = getTriggerTimeoutCounter();
+	private long _timeOutInMillies = getTimeoutInMillies();
 	
 	
 	public CallJenkinsJob(){}
@@ -63,6 +65,12 @@ public class CallJenkinsJob implements Job {
 	{
 		int counterRetries = Integer.parseInt(VerigreenNeededLogic.properties.getProperty("retry.counter"));
 		return counterRetries;
+	}
+	private long getTimeoutInMillies()
+	{
+		int timeoutInMillies = Integer.parseInt(VerigreenNeededLogic.properties.getProperty("jenkins.timeoutInSeconds"));
+		timeoutInMillies = timeoutInMillies * 1000;
+		return timeoutInMillies;
 	}
 	
 	private void calllingJenkinsForCreate() {
@@ -142,17 +150,16 @@ public class CallJenkinsJob implements Job {
 		{  // **line 2**
 				 JsonObject childJsonObject = (JsonObject) jsonBuildsArray.get(i);
 				 String buildNumber = childJsonObject.get("number").getAsString();
-				 Object jenkinsResult = childJsonObject.get("result");
 				 
 				 MinJenkinsJob values = new MinJenkinsJob();
 				 values.setBuildNumber(buildNumber);
-				 if(jenkinsResult == null)
-				 {
+				 if (childJsonObject.get("result") instanceof JsonNull){
 					 values.setJenkinsResult("null");
 				 }
-				 else{
-					 values.setJenkinsResult(jenkinsResult.toString().replace("\"",""));
-				 }
+				 String jenkinsResult = childJsonObject.get("result").getAsString();
+	
+				 values.setJenkinsResult(jenkinsResult);
+				 
 				 
 				 
 //				 String timestamp = childJsonObject.get("timestamp").getAsString();
@@ -191,6 +198,7 @@ public class CallJenkinsJob implements Job {
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 		return result;
 	}
+	
 	private void checkTriggerAndRetryMechanism(Observer observer)
 	{
 		/*TODO check the observer, if the observer (CommitItem) doesn't have _buildnumber 
@@ -247,6 +255,19 @@ public class CallJenkinsJob implements Job {
 		}
 	}
 	
+	private boolean checkForTimeout(CommitItem ci)
+	{
+		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
+		boolean ans = false;
+		long diffInMillies = ci.getRunTime().getTime() - ci.getCreationTime().getTime();
+		   
+		if(diffInMillies > _timeOutInMillies)
+		{
+			ans = true;
+		}	
+		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
+		return ans;
+	}
 	private List<Observer> analyzeResults(Map<String, MinJenkinsJob> parsedResults){
 		
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
@@ -262,9 +283,16 @@ public class CallJenkinsJob implements Job {
 					checkTriggerAndRetryMechanism(observer);
 				}
 				else */
-				if(((CommitItem)observer).getBuildNumber() < 0)
+				boolean hasTimedOut = checkForTimeout((CommitItem)observer);
+				if(hasTimedOut)
 				{
-					if(parsedResults.get(((CommitItem)observer).getMergedBranchName()).equals("null"))
+					observer.update(VerificationStatus.TIMEOUT);
+					jenkinsUpdater.unregister(observer);
+					com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().save((CommitItem)observer);
+				}
+				if(((CommitItem)observer).getBuildNumber() == 0)
+				{
+					if(parsedResults.get(((CommitItem)observer).getMergedBranchName()) != null)
 					{
 						int timeoutCounter = ((CommitItem)observer).getTimeoutCounter();
 						timeoutCounter++;
@@ -272,13 +300,13 @@ public class CallJenkinsJob implements Job {
 						
 						((CommitItem)observer).setTriggeredAttempt(false);
 						
-						jenkinsUpdater.unregister(observer);
+						//jenkinsUpdater.unregister(observer);
 						CommitItemVerifier.getInstance().getCommitItems().add((CommitItem)observer);
 						
 					}	
 					checkTriggerAndRetryMechanism(observer);
 				}
-				if(!parsedResults.get(((CommitItem)observer).getMergedBranchName()).equals("null"))
+				if(!((MinJenkinsJob)parsedResults.get(((CommitItem)observer).getMergedBranchName())).getJenkinsResult().equals("null"))
 				{
 					relevantObservers.add(observer);
 				}

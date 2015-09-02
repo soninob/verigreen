@@ -80,9 +80,10 @@ public class JenkinsUpdater implements Subject {
 		for(Observer observer : relevantObservers)
 		{	
 			MinJenkinsJob result = results.get(((CommitItem)observer).getMergedBranchName());
-			((CommitItem)observer).updateBuildNumber(Integer.parseInt(result.getBuildNumber()));
+			((CommitItem)observer).setBuildNumber(Integer.parseInt(result.getBuildNumber()));
+			
 			try {
-				((CommitItem)observer).updateBuildUrl(new URI(JenkinsVerifier.getBuildUrl(Integer.parseInt(result.getBuildNumber()))));
+				((CommitItem)observer).setBuildUrl(new URI(JenkinsVerifier.getBuildUrl(Integer.parseInt(result.getBuildNumber()))));
 			} catch (URISyntaxException e) {
 				VerigreenLogger.get().error(
 	                    getClass().getName(),
