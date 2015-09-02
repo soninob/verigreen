@@ -160,14 +160,9 @@ public class CallJenkinsJob implements Job {
 				 //buildsAndStatusesMap.put(buildNumber,jenkinsResult);
 				 
 				 JsonArray actionsJsonArray = childJsonObject.get("actions").getAsJsonArray();
-				 for(int j = 0 ; j < actionsJsonArray.size() ; j ++)
-				 {
-					 if(((JsonObject)actionsJsonArray.get(j)).getAsJsonArray("parameters")!= null) 
-					 {
-						 parameterJsonObjectArray = (JsonObject) actionsJsonArray.get(j);
-						 break;
-					 }
-				 }
+				 
+				 parameterJsonObjectArray = checkForParameters(actionsJsonArray);
+				
 				 JsonArray jsonParametersArray =  parameterJsonObjectArray.getAsJsonArray("parameters");
 				 
 				 JsonObject parameterJsonObject = (JsonObject) jsonParametersArray.get(0);
@@ -179,6 +174,22 @@ public class CallJenkinsJob implements Job {
 		}
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 		return buildsAndStatusesMap;
+	}
+	
+	private JsonObject checkForParameters(JsonArray array)
+	{
+		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
+		JsonObject result = null;
+		for(int j = 0 ; j < array.size() ; j ++)
+		 {
+			 if(((JsonObject)array.get(j)).getAsJsonArray("parameters")!= null) 
+			 {
+				 result =  (JsonObject) array.get(j);
+				 break;
+			 }
+		 }
+		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
+		return result;
 	}
 	private void checkTriggerAndRetryMechanism(Observer observer)
 	{
@@ -210,6 +221,7 @@ public class CallJenkinsJob implements Job {
 		{
 			observer.update(VerificationStatus.TRIGGER_FAILED);
 			jenkinsUpdater.unregister(observer);
+			com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().save((CommitItem)observer);
 			//TODO save the commit item
 		}
 		else if(((CommitItem)observer).getTimeoutCounter() < _maximumTimeout)
