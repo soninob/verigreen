@@ -53,7 +53,7 @@ public class JenkinsVerifier implements BuildVerifier {
 
     private static Job job2Verify = getJobToVerify();
     
-    JenkinsUpdater jenkinsUpdater = JenkinsUpdater.getInstance();
+    static JenkinsUpdater jenkinsUpdater = JenkinsUpdater.getInstance();
 
     
     public int getDEFAULT_COUNT() {
@@ -116,7 +116,8 @@ public class JenkinsVerifier implements BuildVerifier {
 	        		 RuntimeUtils.getCurrentMethodName(),
 	        		 String.format("Triggering job [%s] for branch [%s]", job2Verify.getName(), branchName));
 			 Map<String,String> commitParams = VerigreenNeededLogic.checkJenkinsMode(commitItem);
-			 ImmutableMap.Builder<String, String> finalJenkinsParams = ImmutableMap.<String, String>builder().put(CollectorApi.getBranchParamName(), branchName);
+			 ImmutableMap.Builder<String, String> finalJenkinsParams = ImmutableMap.<String, String>builder().put("token",VerigreenNeededLogic.properties.getProperty("jenkins.password"));
+			 finalJenkinsParams.put(CollectorApi.getBranchParamName(), branchName);
 	         for(String key : commitParams.keySet())
 	         {
 	         	finalJenkinsParams.put(key,commitParams.get(key));
@@ -124,6 +125,7 @@ public class JenkinsVerifier implements BuildVerifier {
 	          final ImmutableMap<String, String> params = finalJenkinsParams.build();
 	          job2Verify.build(params);
 	          commitItem.setTriggeredAttempt(true);
+	          jenkinsUpdater.register(commitItem);
 	         
 		} catch (IOException e) {
 		
@@ -136,29 +138,8 @@ public class JenkinsVerifier implements BuildVerifier {
                             branchName),e);
 		} 
     }
-
- public static void stopBuild(int buildNumber)
- {
-	 try {
-		Build build = CollectorApi.getJenkinsServer().getJob(CollectorApi.getVerificationJobName()).getBuildByNumber(buildNumber);
-		build.Stop();
-		
-		VerigreenLogger.get().log(RuntimeUtils.class.getName(),
-       		 RuntimeUtils.getCurrentMethodName(),
-       		 String.format("Stopping build [%s] for job [%s] ...", buildNumber, CollectorApi.getVerificationJobName()));
-	} catch (IOException e) {
-		
-		VerigreenLogger.get().error(
-                JenkinsVerifier.class.getName(),
-                RuntimeUtils.getCurrentMethodName(),
-                String.format(
-                        "Failed to stop build [%s] for job [%s]",
-                        buildNumber,
-                        CollectorApi.getVerificationJobName()),e);
-	}
-
 	 
- }
+
  public static String getBuildUrl(int buildNumber) {
 
     	String buildUrl = null;

@@ -58,8 +58,8 @@ public class CommitItemVerifier {
     
     public void verify(final CommitItem item) {
         
-       /*_commitItemKey = item.getKey();
-        final Future<BuildVerificationResult> future =
+       _commitItemKey = item.getKey();
+       /* final Future<BuildVerificationResult> future =
                 verifyAsync("origin/" + item.getMergedBranchName());*/
         
         createCommitItems.add(item);
@@ -86,7 +86,7 @@ public class CommitItemVerifier {
             VerigreenLogger.get().log(
                     getClass().getName(),
                     RuntimeUtils.getCurrentMethodName(),
-                    String.format("cancelling verification of %s...", commitItem));
+                    String.format("Cancelling verification of %s... \n If stopping the build failed, the job could have been done prior to this moment.", commitItem));
             CollectorApi.getJenkinsVerifier().stop(
                     CollectorApi.getVerificationJobName(),
                     String.valueOf(commitItem.getBuildNumber()));

@@ -52,7 +52,7 @@ public class DecisionMakerFailedItems {
     
     private boolean isPending(CommitItem item) {
         
-        if (item == null || item.isDone()) {
+        if (item == null || item.isDone() ) {
             
             return false;
         }
