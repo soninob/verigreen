@@ -135,7 +135,7 @@ public class CallJenkinsJob implements Job {
 		JsonParser parser = new JsonParser();
 		JsonObject mainJson = (JsonObject) parser.parse(json);
 		
-		JsonObject parameterJsonObjectArray;
+		JsonObject parameterJsonObjectArray = null;
 
 		JsonArray jsonBuildsArray = mainJson.getAsJsonArray("builds");
 		for (int i = 0; i < jsonBuildsArray.size(); i++) 
@@ -160,29 +160,21 @@ public class CallJenkinsJob implements Job {
 				 //buildsAndStatusesMap.put(buildNumber,jenkinsResult);
 				 
 				 JsonArray actionsJsonArray = childJsonObject.get("actions").getAsJsonArray();
-				 
-				 if(((JsonObject)actionsJsonArray.get(0)).getAsJsonArray("parameters")!= null) {
-					 parameterJsonObjectArray = (JsonObject) actionsJsonArray.get(0);
-				 } else {
-					 parameterJsonObjectArray = (JsonObject) actionsJsonArray.get(1);
+				 for(int j = 0 ; j < actionsJsonArray.size() ; j ++)
+				 {
+					 if(((JsonObject)actionsJsonArray.get(j)).getAsJsonArray("parameters")!= null) 
+					 {
+						 parameterJsonObjectArray = (JsonObject) actionsJsonArray.get(j);
+						 break;
+					 }
 				 }
-				 
 				 JsonArray jsonParametersArray =  parameterJsonObjectArray.getAsJsonArray("parameters");
 				 
 				 JsonObject parameterJsonObject = (JsonObject) jsonParametersArray.get(0);
 				 
 				 values.setBranchName(parameterJsonObject.get("value").getAsString());
 				 
-				 buildsAndStatusesMap.put(values.getBranchName(), values);
-				 
-					 
-					 /*if(parameterJsonObject.get("name").getAsString().equals("status"))
-					 {
-						 String resultStatus = parameterJsonObject.get("value").getAsString();
-						 VerificationStatus status = convertToVerifStatusFromString(resultStatus);
-						 buildsAndStatusesMap.put(buildNumber, status);
-						 break;
-					 }*/		
+				 buildsAndStatusesMap.put(values.getBranchName(), values);	
 				 
 		}
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
