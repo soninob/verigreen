@@ -12,12 +12,11 @@ import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-import com.offbytwo.jenkins.JenkinsServer;
-import com.verigreen.collector.api.VerificationStatus;
-import com.verigreen.collector.buildverification.CommitItemVerifier;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.verigreen.collector.api.VerificationStatus;
+import com.verigreen.collector.buildverification.CommitItemVerifier;
 import com.verigreen.collector.buildverification.JenkinsUpdater;
 import com.verigreen.collector.buildverification.JenkinsVerifier;
 import com.verigreen.collector.common.VerigreenNeededLogic;
@@ -68,15 +67,16 @@ public class CallJenkinsJob implements Job {
 	
 	private void calllingJenkinsForCreate() {
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
-		
-		//int listSize = CommitItemVerifier.getInstance().getCommitItems().size();
+
+
 		
 		for (Iterator<CommitItem> iterator = CommitItemVerifier.getInstance().getCommitItems().iterator(); iterator.hasNext();) {
 			CommitItem ci = iterator.next();
-			JenkinsVerifier.triggerJob(ci);
-			jenkinsUpdater.register(com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().get(ci.getKey()));
+			iterator.remove();
+			JenkinsVerifier.triggerJob(com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().get(ci.getKey()));
+			
 			// Remove the current element from the iterator and the list.
-	        iterator.remove();
+	        
 		}
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 	}
@@ -218,7 +218,6 @@ public class CallJenkinsJob implements Job {
 		{
 			observer.update(VerificationStatus.TRIGGER_FAILED);
 			jenkinsUpdater.unregister(observer);
-			JenkinsVerifier.stopBuild(((CommitItem)observer).getBuildNumber());
 			//TODO save the commit item
 		}
 		else if(((CommitItem)observer).getTimeoutCounter() < _maximumTimeout)
@@ -271,7 +270,6 @@ public class CallJenkinsJob implements Job {
 						
 						jenkinsUpdater.unregister(observer);
 						CommitItemVerifier.getInstance().getCommitItems().add((CommitItem)observer);
-						JenkinsVerifier.stopBuild(((CommitItem)observer).getBuildNumber());
 						
 					}	
 					checkTriggerAndRetryMechanism(observer);
