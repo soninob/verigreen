@@ -36,6 +36,7 @@ import com.verigreen.spring.common.CollectorApi;
 public class CallJenkinsJob implements Job {
 
 	JenkinsUpdater jenkinsUpdater = JenkinsUpdater.getInstance();
+	JenkinsVerifier jenkinsVerifier = new JenkinsVerifier();
 	private int _maximumRetries = getNumberOfRetriesCounter();
 	private int _maximumTimeout = getTriggerTimeoutCounter();
 	private long _timeOutInMillies = getTimeoutInMillies();
@@ -125,7 +126,7 @@ public class CallJenkinsJob implements Job {
 				if(!analyzedResults.isEmpty())
 				{
 					/*jenkinsUpdater.notifyObserver(analyzedResults, parsedResults);*/
-					jenkinsUpdater.notifyObserver(jenkinsUpdater.calculateRelevantObservers(analyzedResults, parsedResults));
+					jenkinsUpdater.notifyObserver(jenkinsUpdater.setObserversStatus(analyzedResults, parsedResults));
 				}
 			} catch (JSONException e) {
 				VerigreenLogger.get().error(
@@ -221,16 +222,18 @@ public class CallJenkinsJob implements Job {
 			relevantObservers.add(observer);
 		}*/
 		
+
 		int retriableCounter = ((CommitItem)observer).getRetriableCounter();
 		int timeoutCounter = ((CommitItem)observer).getTimeoutCounter();
-		
+
 		
 		if(timeoutCounter >= _maximumTimeout && retriableCounter >= _maximumRetries)
 		{
-			observer.update(VerificationStatus.TRIGGER_FAILED);
+			((CommitItem)observer).setStatus(VerificationStatus.TRIGGER_FAILED);
 			jenkinsUpdater.unregister(observer);
-			com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().save((CommitItem)observer);
+			com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().save(((CommitItem)observer));
 			//TODO save the commit item
+			jenkinsVerifier.stop(VerigreenNeededLogic.properties.getProperty("jenkins.jobName"), Integer.toString(((CommitItem)observer).getBuildNumber()));
 		}
 		else if(((CommitItem)observer).getTimeoutCounter() < _maximumTimeout)
 		{
@@ -238,11 +241,12 @@ public class CallJenkinsJob implements Job {
 			timeoutCounter++;
 			((CommitItem)observer).setTimeoutCounter(timeoutCounter);
 			
-			((CommitItem)observer).setTriggeredAttempt(false);
+			//commitItem.setTriggeredAttempt(false);
 			
-			jenkinsUpdater.unregister(observer);
-			CommitItemVerifier.getInstance().getCommitItems().add((CommitItem)observer);
-		}
+			//jenkinsUpdater.unregister(observer);
+			//CommitItemVerifier.getInstance().getCommitItems().add(commitItem);
+			//jenkinsVerifier.stop(VerigreenNeededLogic.properties.getProperty("jenkins.jobName"), Integer.toString(commitItem.getBuildNumber()));
+			}
 		else{
 
 			retriableCounter++;
@@ -250,6 +254,9 @@ public class CallJenkinsJob implements Job {
 			
 			((CommitItem)observer).setTimeoutCounter(0);
 			
+			//jenkinsUpdater.unregister(observer);
+			//CommitItemVerifier.getInstance().getCommitItems().add(commitItem);
+			//jenkinsVerifier.stop(VerigreenNeededLogic.properties.getProperty("jenkins.jobName"), Integer.toString(commitItem.getBuildNumber()));
 		}
 	}
 	
@@ -281,14 +288,13 @@ public class CallJenkinsJob implements Job {
 					checkTriggerAndRetryMechanism(observer);
 				}
 				else */
-				
-				CommitItem commitItem = com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().get(((CommitItem)observer).getKey());
-				boolean hasTimedOut = checkForTimeout(commitItem);
+			
+				boolean hasTimedOut = checkForTimeout((CommitItem)observer);
 				if(hasTimedOut)
 				{
-					commitItem.setStatus(VerificationStatus.TIMEOUT);
+					observer.update(VerificationStatus.TIMEOUT);
 					jenkinsUpdater.unregister(observer);
-					com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().save(commitItem);
+					com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().save((CommitItem)observer);
 				}
 				if(((CommitItem)observer).getBuildNumber() == 0)
 				{
@@ -297,12 +303,12 @@ public class CallJenkinsJob implements Job {
 						//jenkinsUpdater.unregister(observer);
 						checkTriggerAndRetryMechanism(observer);				
 					}
-					else if(parsedResults.get(((CommitItem)observer).getMergedBranchName()).getJenkinsResult().equals("null"))
+					else /*if(parsedResults.get(((CommitItem)observer).getMergedBranchName()).getJenkinsResult().equals("null"))*/
 					{//we don't have a build number but the observer is running
-						commitItem.setBuildNumber(Integer.parseInt(parsedResults.get(((CommitItem)observer).getMergedBranchName()).getBuildNumber()));
-						commitItem.setBuildUrl(new URI (JenkinsVerifier.getBuildUrl(Integer.parseInt(parsedResults.get(((CommitItem)observer).getMergedBranchName()).getBuildNumber()))));
+						((CommitItem)observer).setBuildNumber(Integer.parseInt(parsedResults.get(((CommitItem)observer).getMergedBranchName()).getBuildNumber()));
+						((CommitItem)observer).setBuildUrl(new URI (JenkinsVerifier.getBuildUrl(Integer.parseInt(parsedResults.get(((CommitItem)observer).getMergedBranchName()).getBuildNumber()))));
 						
-						com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().save(commitItem);
+						com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().save(((CommitItem)observer));
 					}
 					
 				}
@@ -316,11 +322,21 @@ public class CallJenkinsJob implements Job {
 			catch (NullPointerException e){ //means that the update didn't get details of the new create.
 				continue;
 			} catch (NumberFormatException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				VerigreenLogger.get().error(
+	                    getClass().getName(),
+	                    RuntimeUtils.getCurrentMethodName(),
+	                    String.format(
+	                            "Illegal character in build number: [%s]",
+	                            Integer.parseInt(parsedResults.get(((CommitItem)observer).getMergedBranchName()).getBuildNumber())),
+	                    e);
 			} catch (URISyntaxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				VerigreenLogger.get().error(
+	                    getClass().getName(),
+	                    RuntimeUtils.getCurrentMethodName(),
+	                    String.format(
+	                            "Illegal character in build URL: [%s]",
+	                            JenkinsVerifier.getBuildUrl(Integer.parseInt(parsedResults.get(((CommitItem)observer).getMergedBranchName()).getBuildNumber()))),
+	                    e);
 			}
 		}
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");

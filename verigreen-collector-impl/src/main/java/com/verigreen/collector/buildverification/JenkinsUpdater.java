@@ -1,12 +1,11 @@
 package com.verigreen.collector.buildverification;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.offbytwo.jenkins.model.BuildResult;
 import com.verigreen.collector.api.VerificationStatus;
 import com.verigreen.collector.common.log4j.VerigreenLogger;
 import com.verigreen.collector.model.CommitItem;
@@ -25,8 +24,9 @@ public class JenkinsUpdater implements Subject {
 	static
     {
     	_verificationStatusesMap = new HashMap<String, VerificationStatus>();
-    	_verificationStatusesMap.put("SUCCESS", VerificationStatus.PASSED);
-    	_verificationStatusesMap.put("ABORTED", VerificationStatus.FAILED);
+    	_verificationStatusesMap.put(BuildResult.SUCCESS.toString(), VerificationStatus.PASSED);
+    	_verificationStatusesMap.put(BuildResult.ABORTED.toString(), VerificationStatus.FAILED);
+    	_verificationStatusesMap.put(BuildResult.FAILURE.toString(), VerificationStatus.FAILED);
     	_verificationStatusesMap.put("null", VerificationStatus.RUNNING);
     }
     
@@ -75,14 +75,15 @@ public class JenkinsUpdater implements Subject {
 	                     o.toString()));
 	}
 
-	public List<Observer> calculateRelevantObservers(List<Observer> relevantObservers, Map <String, MinJenkinsJob> results){
+	public List<Observer> setObserversStatus(List<Observer> relevantObservers, Map <String, MinJenkinsJob> results){
 		List<Observer> notifiedObservers = new ArrayList<Observer>();
+		MinJenkinsJob result;
 		for(Observer observer : relevantObservers)
 		{	
-			MinJenkinsJob result = results.get(((CommitItem)observer).getMergedBranchName());
-			((CommitItem)observer).setBuildNumber(Integer.parseInt(result.getBuildNumber()));
+			result = results.get(((CommitItem)observer).getMergedBranchName());
+			/*((CommitItem)observer).setBuildNumber(Integer.parseInt(result.getBuildNumber()));*/
 			
-			try {
+			/*try {
 				((CommitItem)observer).setBuildUrl(new URI(JenkinsVerifier.getBuildUrl(Integer.parseInt(result.getBuildNumber()))));
 			} catch (URISyntaxException e) {
 				VerigreenLogger.get().error(
@@ -92,7 +93,7 @@ public class JenkinsUpdater implements Subject {
 	                            "Illegal character in build URL: [%s]",
 	                            JenkinsVerifier.getBuildUrl(Integer.parseInt(result.getBuildNumber()))),
 	                    e);
-			}
+			}*/
 
 			observer.update(_verificationStatusesMap.get(result.getJenkinsResult()));
 			notifiedObservers.add(observer);
@@ -111,10 +112,10 @@ public class JenkinsUpdater implements Subject {
 		for(Observer observer : relevantObservers){
 			
 			notifiedObservers.add((CommitItem)observer);
-			if(!((CommitItem)observer).getStatus().equals(VerificationStatus.RUNNING))
-			{
+			/*if(!((CommitItem)observer).getStatus().equals(VerificationStatus.RUNNING))
+			{*/
 				unregister(observer);
-			}
+			/*}*/
 			VerigreenLogger.get().log(
 		             getClass().getName(),
 		             RuntimeUtils.getCurrentMethodName(),
