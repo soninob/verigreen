@@ -1,5 +1,7 @@
 package com.verigreen.collector.jobs;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -156,10 +158,10 @@ public class CallJenkinsJob implements Job {
 				 if (childJsonObject.get("result") instanceof JsonNull){
 					 values.setJenkinsResult("null");
 				 }
-				 String jenkinsResult = childJsonObject.get("result").getAsString();
-	
-				 values.setJenkinsResult(jenkinsResult);
-				 
+				 else
+				 {
+					 values.setJenkinsResult(childJsonObject.get("result").getAsString());
+				 }
 				 
 				 
 //				 String timestamp = childJsonObject.get("timestamp").getAsString();
@@ -185,7 +187,6 @@ public class CallJenkinsJob implements Job {
 	
 	private JsonObject checkForParameters(JsonArray array)
 	{
-		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
 		JsonObject result = null;
 		for(int j = 0 ; j < array.size() ; j ++)
 		 {
@@ -195,7 +196,6 @@ public class CallJenkinsJob implements Job {
 				 break;
 			 }
 		 }
-		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 		return result;
 	}
 	
@@ -250,8 +250,6 @@ public class CallJenkinsJob implements Job {
 			
 			((CommitItem)observer).setTimeoutCounter(0);
 			
-			jenkinsUpdater.unregister(observer);
-			CommitItemVerifier.getInstance().getCommitItems().add((CommitItem)observer);
 		}
 	}
 	
@@ -283,37 +281,46 @@ public class CallJenkinsJob implements Job {
 					checkTriggerAndRetryMechanism(observer);
 				}
 				else */
-				boolean hasTimedOut = checkForTimeout((CommitItem)observer);
+				
+				CommitItem commitItem = com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().get(((CommitItem)observer).getKey());
+				boolean hasTimedOut = checkForTimeout(commitItem);
 				if(hasTimedOut)
 				{
-					observer.update(VerificationStatus.TIMEOUT);
+					commitItem.setStatus(VerificationStatus.TIMEOUT);
 					jenkinsUpdater.unregister(observer);
-					com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().save((CommitItem)observer);
+					com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().save(commitItem);
 				}
 				if(((CommitItem)observer).getBuildNumber() == 0)
 				{
-					if(parsedResults.get(((CommitItem)observer).getMergedBranchName()) != null)
-					{
-						int timeoutCounter = ((CommitItem)observer).getTimeoutCounter();
-						timeoutCounter++;
-						((CommitItem)observer).setTimeoutCounter(timeoutCounter);
-						
-						((CommitItem)observer).setTriggeredAttempt(false);
-						
+					if(parsedResults.get(((CommitItem)observer).getMergedBranchName()) == null)
+					{//we don't have a build number and no result from Jenkins -- we need to check the retry and trigger mechanism
 						//jenkinsUpdater.unregister(observer);
-						CommitItemVerifier.getInstance().getCommitItems().add((CommitItem)observer);
+						checkTriggerAndRetryMechanism(observer);				
+					}
+					else if(parsedResults.get(((CommitItem)observer).getMergedBranchName()).getJenkinsResult().equals("null"))
+					{//we don't have a build number but the observer is running
+						commitItem.setBuildNumber(Integer.parseInt(parsedResults.get(((CommitItem)observer).getMergedBranchName()).getBuildNumber()));
+						commitItem.setBuildUrl(new URI (JenkinsVerifier.getBuildUrl(Integer.parseInt(parsedResults.get(((CommitItem)observer).getMergedBranchName()).getBuildNumber()))));
 						
-					}	
-					checkTriggerAndRetryMechanism(observer);
+						com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().save(commitItem);
+					}
+					
 				}
-				if(!((MinJenkinsJob)parsedResults.get(((CommitItem)observer).getMergedBranchName())).getJenkinsResult().equals("null"))
-				{
+				
+				else if(!((MinJenkinsJob)parsedResults.get(((CommitItem)observer).getMergedBranchName())).getJenkinsResult().equals("null"))
+				{// if we are here we already have a build number
 					relevantObservers.add(observer);
 				}
 			
 			}
 			catch (NullPointerException e){ //means that the update didn't get details of the new create.
 				continue;
+			} catch (NumberFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (URISyntaxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
