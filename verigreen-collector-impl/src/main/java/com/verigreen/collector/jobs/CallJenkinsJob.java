@@ -66,7 +66,7 @@ public class CallJenkinsJob implements Job {
 	
 	private int getNumberOfRetriesCounter()
 	{
-		int counterRetries = Integer.parseInt(VerigreenNeededLogic.properties.getProperty("retry.counter"));
+		int counterRetries = Integer.parseInt(VerigreenNeededLogic.properties.getProperty("default_count"));
 		return counterRetries;
 	}
 	private long getTimeoutInMillies()
@@ -240,7 +240,6 @@ public class CallJenkinsJob implements Job {
 
 			timeoutCounter++;
 			((CommitItem)observer).setTimeoutCounter(timeoutCounter);
-			
 			//commitItem.setTriggeredAttempt(false);
 			
 			//jenkinsUpdater.unregister(observer);
