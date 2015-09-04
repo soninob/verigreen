@@ -53,6 +53,7 @@ public class JenkinsVerifier implements BuildVerifier {
 
     private static Job job2Verify = getJobToVerify();
     
+    
     static JenkinsUpdater jenkinsUpdater = JenkinsUpdater.getInstance();
 
     
@@ -79,17 +80,65 @@ public class JenkinsVerifier implements BuildVerifier {
 	public void setMAX_SLEEP_TIME(int mAX_SLEEP_TIME) {
 		MAX_SLEEP_TIME = mAX_SLEEP_TIME;
 	}
+	
+	private static int getJobRetryCounter()
+	{
+		int jobRetry = Integer.parseInt(VerigreenNeededLogic.properties.getProperty("job.retry.counter"));
+		return jobRetry;
+	}
+	
 	private static Job getJobToVerify()
 	{
 		Job jobToVerify =  null;
+		int jobRetries = getJobRetryCounter();
+		int retries = 1;
+		while(retries < jobRetries + 1)
+		{
 		try {
-			jobToVerify = CollectorApi.getJenkinsServer().getJob((CollectorApi.getVerificationJobName().toLowerCase()));
-		} catch (IOException e) {
+			VerigreenLogger.get().log(
+	                JenkinsVerifier.class.getName(),
+	                RuntimeUtils.getCurrentMethodName(),
+	                String.format(
+	                        "Attempting to retrieve job for verification...", retries));
+			jobToVerify = CollectorApi.getJenkinsServer().getJob((CollectorApi.getVerificationJobName().toLowerCase()));	
+		}
+		catch (IOException e) 
+		{		
 			VerigreenLogger.get().error(
                     JenkinsVerifier.class.getName(),
                     RuntimeUtils.getCurrentMethodName(),
                     String.format(
                             "Failed get job for verification"),e);
+		}
+		finally
+		{
+			if(jobToVerify != null)
+			{
+				VerigreenLogger.get().log(
+	                    JenkinsVerifier.class.getName(),
+	                    RuntimeUtils.getCurrentMethodName(),
+	                    String.format(
+	                            "Job for verification was retrieved successfully after [%s] retries", retries));
+				break;
+			}
+			else
+			{
+				VerigreenLogger.get().log(
+	                    JenkinsVerifier.class.getName(),
+	                    RuntimeUtils.getCurrentMethodName(),
+	                    String.format(
+	                            "Failed to retrieve job for verification. Retrying..."));
+				retries++;
+			}
+		}
+		}
+		if(jobToVerify == null)
+		{
+			VerigreenLogger.get().error(
+                    JenkinsVerifier.class.getName(),
+                    RuntimeUtils.getCurrentMethodName(),
+                    String.format(
+                            "Failed get job for verification after [%s] retries", retries - 1));
 		}
 		return jobToVerify;
 	}
