@@ -261,16 +261,17 @@ public class CallJenkinsJob implements Job {
 	
 	private boolean checkForTimeout(CommitItem ci)
 	{
-		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
-		boolean ans = false;
-		long diffInMillies = ci.getRunTime().getTime() - ci.getCreationTime().getTime();
+		/*VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");*/
+		//boolean ans = false;
+		return System.currentTimeMillis() - ci.getRunTime().getTime() > _timeOutInMillies;
+		/*long diffInMillies = ci.getRunTime().getTime() - ci.getCreationTime().getTime();
 		   
 		if(diffInMillies > _timeOutInMillies)
 		{
 			ans = true;
 		}	
 		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
-		return ans;
+		return ans;*/
 	}
 	private List<Observer> analyzeResults(Map<String, MinJenkinsJob> parsedResults){
 		

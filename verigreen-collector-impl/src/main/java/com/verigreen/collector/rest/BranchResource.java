@@ -30,7 +30,6 @@ import org.json.JSONException;
 
 import com.verigreen.collector.api.BranchDescriptor;
 import com.verigreen.collector.api.VerificationStatus;
-import com.verigreen.collector.buildverification.JenkinsUpdater;
 import com.verigreen.collector.common.CommitItemUtils;
 import com.verigreen.collector.common.VerigreenNeededLogic;
 import com.verigreen.collector.common.log4j.VerigreenLogger;
@@ -96,6 +95,7 @@ public class BranchResource {
     	CommitItem localCommitItem = retrieveCommitItem(branch);
         if (localCommitItem != null){
 	        localCommitItem.setStatus(VerificationStatus.NOT_STARTED);
+	        localCommitItem.setBuildNumber(0);
 	        localCommitItem.setDone(false);
         }
         return localCommitItem;
