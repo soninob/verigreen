@@ -125,7 +125,6 @@ public class CallJenkinsJob implements Job {
 				
 				if(!analyzedResults.isEmpty())
 				{
-					/*jenkinsUpdater.notifyObserver(analyzedResults, parsedResults);*/
 					jenkinsUpdater.notifyObserver(jenkinsUpdater.setObserversStatus(analyzedResults, parsedResults));
 				}
 			} catch (JSONException e) {
@@ -222,56 +221,43 @@ public class CallJenkinsJob implements Job {
 			relevantObservers.add(observer);
 		}*/
 		
-
-		int retriableCounter = ((CommitItem)observer).getRetriableCounter();
-		int timeoutCounter = ((CommitItem)observer).getTimeoutCounter();
+		CommitItem itemToBeChecked = com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().get(((CommitItem)observer).getKey());
+		int retriableCounter = itemToBeChecked.getRetriableCounter();
+		int timeoutCounter = itemToBeChecked.getTimeoutCounter();
 
 		
 		if(timeoutCounter >= _maximumTimeout && retriableCounter >= _maximumRetries)
 		{
-			((CommitItem)observer).setStatus(VerificationStatus.TRIGGER_FAILED);
+			com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().save(itemToBeChecked);
+			itemToBeChecked.setStatus(VerificationStatus.TRIGGER_FAILED);
 			jenkinsUpdater.unregister(observer);
-			com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().save(((CommitItem)observer));
-			//TODO save the commit item
-			jenkinsVerifier.stop(VerigreenNeededLogic.properties.getProperty("jenkins.jobName"), Integer.toString(((CommitItem)observer).getBuildNumber()));
-		}
-		else if(((CommitItem)observer).getTimeoutCounter() < _maximumTimeout)
-		{
+			com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().save(com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().get(((CommitItem)itemToBeChecked).getKey()));
 
-			timeoutCounter++;
-			((CommitItem)observer).setTimeoutCounter(timeoutCounter);
-			//commitItem.setTriggeredAttempt(false);
+		}
+		else if(timeoutCounter < _maximumTimeout)
+		{
 			
-			//jenkinsUpdater.unregister(observer);
-			//CommitItemVerifier.getInstance().getCommitItems().add(commitItem);
-			//jenkinsVerifier.stop(VerigreenNeededLogic.properties.getProperty("jenkins.jobName"), Integer.toString(commitItem.getBuildNumber()));
-			}
+			timeoutCounter++;
+			itemToBeChecked.setTimeoutCounter(timeoutCounter);
+			itemToBeChecked.setTriggeredAttempt(false);
+			com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().save(itemToBeChecked);
+			jenkinsUpdater.unregister(observer);
+			CommitItemVerifier.getInstance().getCommitItems().add(com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().get(((CommitItem)itemToBeChecked).getKey()));
+		}
 		else{
 
 			retriableCounter++;
-			((CommitItem)observer).setRetriableCounter(retriableCounter);
-			
-			((CommitItem)observer).setTimeoutCounter(0);
-			
-			//jenkinsUpdater.unregister(observer);
-			//CommitItemVerifier.getInstance().getCommitItems().add(commitItem);
-			//jenkinsVerifier.stop(VerigreenNeededLogic.properties.getProperty("jenkins.jobName"), Integer.toString(commitItem.getBuildNumber()));
+			itemToBeChecked.setRetriableCounter(retriableCounter);
+			com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().save(itemToBeChecked);
+			jenkinsUpdater.unregister(observer);
+			CommitItemVerifier.getInstance().getCommitItems().add(com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().get(((CommitItem)itemToBeChecked).getKey()));
+
 		}
 	}
 	
 	private boolean checkForTimeout(CommitItem ci)
 	{
-		/*VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");*/
-		//boolean ans = false;
 		return System.currentTimeMillis() - ci.getRunTime().getTime() > _timeOutInMillies;
-		/*long diffInMillies = ci.getRunTime().getTime() - ci.getCreationTime().getTime();
-		   
-		if(diffInMillies > _timeOutInMillies)
-		{
-			ans = true;
-		}	
-		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
-		return ans;*/
 	}
 	private List<Observer> analyzeResults(Map<String, MinJenkinsJob> parsedResults){
 		
@@ -283,11 +269,6 @@ public class CallJenkinsJob implements Job {
 			try {
 				//the default build url for an untriggered item is 0, also check for null value in the parsed results, that means that 
 				//the MinJenkinsJob didn't get any response for that particular commit item 
-				/*if(parsedResults.get(((CommitItem)observer).getMergedBranchName()).equals("null"))
-				{
-					checkTriggerAndRetryMechanism(observer);
-				}
-				else */
 			
 				boolean hasTimedOut = checkForTimeout((CommitItem)observer);
 				if(hasTimedOut)
@@ -300,10 +281,10 @@ public class CallJenkinsJob implements Job {
 				{
 					if(parsedResults.get(((CommitItem)observer).getMergedBranchName()) == null)
 					{//we don't have a build number and no result from Jenkins -- we need to check the retry and trigger mechanism
-						//jenkinsUpdater.unregister(observer);
+			
 						checkTriggerAndRetryMechanism(observer);				
 					}
-					else /*if(parsedResults.get(((CommitItem)observer).getMergedBranchName()).getJenkinsResult().equals("null"))*/
+					else
 					{//we don't have a build number but the observer is running
 						((CommitItem)observer).setBuildNumber(Integer.parseInt(parsedResults.get(((CommitItem)observer).getMergedBranchName()).getBuildNumber()));
 						((CommitItem)observer).setBuildUrl(new URI (JenkinsVerifier.getBuildUrl(Integer.parseInt(parsedResults.get(((CommitItem)observer).getMergedBranchName()).getBuildNumber()))));

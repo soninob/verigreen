@@ -57,12 +57,12 @@ public class CommitItemVerifier {
     }
     
     public void verify(final CommitItem item) {
-        CommitItem itemFromContainer = CollectorApi.getCommitItemContainer().get(item.getKey());
-       _commitItemKey = itemFromContainer.getKey();
+
+       _commitItemKey = item.getKey();
        /* final Future<BuildVerificationResult> future =
                 verifyAsync("origin/" + item.getMergedBranchName());*/
         
-        createCommitItems.add(itemFromContainer);
+        createCommitItems.add(item);
         
         /*ExecutorServiceFactory.fireAndForget(new Runnable() {
             
