@@ -135,7 +135,7 @@ public class VerigreenNeededLogic {
 		srcControl.fetch();
 	}
 	
-	private void sendEmailNotification(String subject, String messageText, String[] recipients, String signature) {
+	public void sendEmailNotification(String subject, String messageText, String[] recipients, String signature) {
 		
 		try {
             EmailUtils.send(
@@ -159,7 +159,7 @@ public class VerigreenNeededLogic {
 	
 	public static String getSignature() {
         
-        return "<br><br><b>Have an <font color=\"green\">Verigreen</font> Day!</b></br><img src=\""+properties.getProperty("collector.address").replace("/rest","/VeriGreenLogo_Wide.png")+"\" width=\"250\" height=\"75\"></br></br>";
+        return "<br><br><b>Have a <font color=\"green\">Verigreen</font> Day!</b></br><img src=\""+properties.getProperty("collector.address").replace("/rest","/VeriGreenLogo_Wide.png")+"\" width=\"250\" height=\"75\"></br></br>";
     }
 
 	public void setJenkinsProperties() throws IOException

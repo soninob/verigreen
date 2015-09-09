@@ -207,12 +207,11 @@ public class CallJenkinsJob implements Job {
 		 * 1) if both counters reaches their limits if so = trigger failed
 		 * 	  if timeoutConter didn't reach the limit then:
 			 * 		++timeoutcounter
-			 * 		change the triggerAtemoted to false
-			 * 		unregister the observer from subject (update)
-			 * 		adding it (commitItem) to the commitItemVerifier list. 
 			 * else
 		 * 			++triggercounter;
 		 * 			timeoutCounter = 0;
+		 * 			change the triggerAttempt to false
+		 * 			save the commit item
 		 * unregister the observer from subject (update)
 			 * 		adding it (commitItem) to the commitItemVerifier list.
 		*/
@@ -236,18 +235,20 @@ public class CallJenkinsJob implements Job {
 		}
 		else if(timeoutCounter < _maximumTimeout)
 		{
-			
+
 			timeoutCounter++;
 			itemToBeChecked.setTimeoutCounter(timeoutCounter);
-			itemToBeChecked.setTriggeredAttempt(false);
+			//we update the observer too
+			((CommitItem)observer).setTimeoutCounter(timeoutCounter);			
 			com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().save(itemToBeChecked);
-			jenkinsUpdater.unregister(observer);
-			CommitItemVerifier.getInstance().getCommitItems().add(com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().get(((CommitItem)itemToBeChecked).getKey()));
 		}
 		else{
 
 			retriableCounter++;
+			timeoutCounter = 0;
+			itemToBeChecked.setTimeoutCounter(timeoutCounter);
 			itemToBeChecked.setRetriableCounter(retriableCounter);
+			itemToBeChecked.setTriggeredAttempt(false);
 			com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().save(itemToBeChecked);
 			jenkinsUpdater.unregister(observer);
 			CommitItemVerifier.getInstance().getCommitItems().add(com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().get(((CommitItem)itemToBeChecked).getKey()));

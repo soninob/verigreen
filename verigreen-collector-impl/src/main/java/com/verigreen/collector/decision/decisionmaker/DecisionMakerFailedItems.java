@@ -116,7 +116,7 @@ public class DecisionMakerFailedItems {
                     String.format("Failed creating json file: " + System.getenv("VG_HOME") + "\\history.json",
                     e));
 		}
-        
+        item.setBuildNumber(0);
         item.setStatus(VerificationStatus.NOT_STARTED);
         houseOfCards(item.getChild(), decisions);
         
