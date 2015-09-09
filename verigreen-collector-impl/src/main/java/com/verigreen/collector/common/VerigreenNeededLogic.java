@@ -135,7 +135,7 @@ public class VerigreenNeededLogic {
 		srcControl.fetch();
 	}
 	
-	private void sendEmailNotification(String subject, String messageText, String[] recipients, String signature) {
+	public void sendEmailNotification(String subject, String messageText, String[] recipients, String signature) {
 		
 		try {
             EmailUtils.send(
