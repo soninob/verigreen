@@ -95,6 +95,8 @@ public class BranchResource {
     	CommitItem localCommitItem = retrieveCommitItem(branch);
         if (localCommitItem != null){
 	        localCommitItem.setStatus(VerificationStatus.NOT_STARTED);
+	        localCommitItem.setTimeoutCounter(0);
+	        localCommitItem.setRetriableCounter(0);
 	        localCommitItem.setBuildNumber(0);
 	        localCommitItem.setDone(false);
         }
