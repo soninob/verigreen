@@ -21,6 +21,7 @@ import java.util.List;
 import org.json.JSONException;
 
 import com.verigreen.collector.api.VerificationStatus;
+import com.verigreen.collector.buildverification.JenkinsUpdater;
 import com.verigreen.collector.cache.container.CommitItemContainer;
 import com.verigreen.collector.common.CommitItemUtils;
 import com.verigreen.collector.common.log4j.VerigreenLogger;
@@ -31,7 +32,7 @@ import com.verigreen.collector.spring.CollectorApi;
 import com.verigreen.common.concurrency.RuntimeUtils;
 
 public class DecisionMakerFailedItems {
-    
+
     public List<Decision> execute(Collection<CommitItem> items) {
         
         List<Decision> ret = new ArrayList<>();
@@ -94,6 +95,8 @@ public class DecisionMakerFailedItems {
             return;
         }
         if (item.getStatus().equals(VerificationStatus.RUNNING)) {
+        	JenkinsUpdater.getInstance().unregister(item);
+        	item.setBuildNumberToStop(item.getBuildNumber());
             decisions.add(new Decision(item.getKey(), CollectorApi.getOnFailedByParentHandler(item)));
         }
         VerigreenLogger.get().log(
@@ -116,13 +119,14 @@ public class DecisionMakerFailedItems {
                     String.format("Failed creating json file: " + System.getenv("VG_HOME") + "\\history.json",
                     e));
 		}
+        item.setBuildNumberToStop(item.getBuildNumber());
         item.setBuildNumber(0);
         item.setStatus(VerificationStatus.NOT_STARTED);
+        CollectorApi.getCommitItemContainer().save(item);
         houseOfCards(item.getChild(), decisions);
         
         item.setParent(null);
         item.setChild(null);
-        CollectorApi.getCommitItemContainer().save(item);
     }
     
     private Collection<CommitItem> getFailedAndRefresh(Collection<CommitItem> items) {

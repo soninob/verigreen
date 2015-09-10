@@ -46,8 +46,8 @@ public class CommitItem extends UUIDEntity implements Comparable<CommitItem>, Ob
     private String _childCommit = "";
     private int _timeoutCounter = 0;
 	private int _retriableCounter = 0; 
-    
-    private boolean _triggeredAttempt = false;
+    private int _buildNumberToStop = 0;
+	private boolean _triggeredAttempt = false;
     
     public CommitItem() {}
     
@@ -61,6 +61,13 @@ public class CommitItem extends UUIDEntity implements Comparable<CommitItem>, Ob
         
         return EMPTY.equals(value);
     }
+    public int getBuildNumberToStop() {
+		return _buildNumberToStop;
+	}
+
+	public void setBuildNumberToStop(int _buildNumberToStop) {
+		this._buildNumberToStop = _buildNumberToStop;
+	}
     public int getTimeoutCounter() {
 		return _timeoutCounter;
 	}
@@ -240,7 +247,7 @@ public class CommitItem extends UUIDEntity implements Comparable<CommitItem>, Ob
         
         return String.format(
                 "CommitItem [\n\t_branchDescriptor=%s,\n\t_mergedBranchName=%s, _status=%s, _creationTime=%s, _runTime=%s, _endTime=%s, _buildUrl=%s, _isDone=%s, _parent=%s, _child=%s, "
-                + "_timeoutCounter=%s, _retriableCounter=%s, _triggeredAttempt=%s]",
+                + "_timeoutCounter=%s, _retriableCounter=%s, _triggeredAttempt=%s, _buildNumberToStop=%s] ",
                 _branchDescriptor,
                 _mergedBranchName,
                 _status,
@@ -253,7 +260,8 @@ public class CommitItem extends UUIDEntity implements Comparable<CommitItem>, Ob
                 _child != null ? _child.getKey() : null,
         		_timeoutCounter,
         		_retriableCounter,
-        		_triggeredAttempt);
+        		_triggeredAttempt,
+        		_buildNumberToStop);
         		
     }
 
