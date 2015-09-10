@@ -14,6 +14,7 @@ package com.verigreen.collector.decision;
 
 import com.verigreen.collector.api.VerificationStatus;
 import com.verigreen.collector.buildverification.CommitItemVerifier;
+import com.verigreen.collector.buildverification.JenkinsUpdater;
 import com.verigreen.collector.common.EmailSender;
 import com.verigreen.collector.common.log4j.VerigreenLogger;
 import com.verigreen.collector.model.CommitItem;
@@ -31,6 +32,7 @@ public class OnSuccessByChildHandler extends DecisionHandler {
     protected void doHandle() {
         
         cancelJobIfRunning();
+        JenkinsUpdater.getInstance().unregister(_commitItem);
         _commitItem.setStatus(VerificationStatus.PASSED_BY_CHILD);
         CollectorApi.getCommitItemContainer().save(_commitItem);
         deleteVerificationBranch();

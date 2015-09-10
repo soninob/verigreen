@@ -283,7 +283,7 @@ public class CallJenkinsJob implements Job {
 					if(parsedResults.get(((CommitItem)observer).getMergedBranchName()) == null)
 					{//we don't have a build number and no result from Jenkins -- we need to check the retry and trigger mechanism
 			
-						//checkTriggerAndRetryMechanism(observer);				
+						checkTriggerAndRetryMechanism(observer);				
 					}
 					else
 					{//we don't have a build number but the observer is running
