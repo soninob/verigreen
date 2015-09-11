@@ -81,7 +81,7 @@ public class CallJenkinsJob implements Job {
 	             getClass().getName(),
 	             RuntimeUtils.getCurrentMethodName(),
 	             String.format(
-	                     "Jenkins called for create on [%s] not created items...",
+	                     "There are [%s] not triggered items...",
 	                     CommitItemVerifier.getInstance().getCommitItems().size() ));
 
 
