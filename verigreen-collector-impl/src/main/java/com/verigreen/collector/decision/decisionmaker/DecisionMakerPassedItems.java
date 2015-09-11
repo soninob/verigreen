@@ -12,11 +12,15 @@
  *******************************************************************************/
 package com.verigreen.collector.decision.decisionmaker;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.json.JSONException;
+
 import com.verigreen.collector.api.VerificationStatus;
+import com.verigreen.collector.buildverification.JenkinsUpdater;
 import com.verigreen.collector.common.CommitItemUtils;
 import com.verigreen.collector.common.log4j.VerigreenLogger;
 import com.verigreen.collector.decision.Decision;
@@ -76,17 +80,32 @@ public class DecisionMakerPassedItems {
                         getClass().getName(),
                         RuntimeUtils.getCurrentMethodName(),
                         String.format("Setting commit item as done (%s)", item));
-                item.setDone(true);
+                item.setDone(true); 
                 ret.add(new Decision(item.getKey(), CollectorApi.getOnSuccessByChildHandler(item)));
                 CollectorApi.getCommitItemContainer().save(item);
             }
-            if(item.getStatus().equals(VerificationStatus.FAILED) )
+            if(item.getStatus().equals(VerificationStatus.FAILED))
             {
             	VerigreenLogger.get().log(
                         getClass().getName(),
                         RuntimeUtils.getCurrentMethodName(),
                         String.format("Setting failed  item as done (%s)", item));
             	  item.setDone(true);
+            	try {
+          			CommitItemUtils.createJsonFile(item,true);
+          		} catch (JSONException e) {
+          			VerigreenLogger.get().error(
+          					getClass().getName(),
+                              RuntimeUtils.getCurrentMethodName(),
+                              String.format("Failed creating JSON object",
+                              e));
+          		} catch (IOException e) {
+          			VerigreenLogger.get().error(
+          					getClass().getName(),
+                              RuntimeUtils.getCurrentMethodName(),
+                              String.format("Failed creating json file: " + System.getenv("VG_HOME") + "\\history.json",
+                              e));
+          		}
                 ret.add(new Decision(item.getKey(), CollectorApi.getOnSuccessByChildHandler(item)));
                 CollectorApi.getCommitItemContainer().save(item);
             }
