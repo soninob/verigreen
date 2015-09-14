@@ -93,15 +93,19 @@ public class JenkinsUpdater implements Subject {
 	//the relevant observers are notified, unregistered and saved to the commit item container	
 		List<CommitItem> notifiedObservers = new ArrayList<CommitItem>();
 		for(Observer observer : relevantObservers){
-			
-			notifiedObservers.add((CommitItem)observer);
-			unregister(observer);
-			VerigreenLogger.get().log(
-		             getClass().getName(),
-		             RuntimeUtils.getCurrentMethodName(),
-		             String.format(
-		                     "Successfully updated and saved observer: %s",
-		                     observer.toString()));
+			if(!com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().get(((CommitItem)observer).getKey()).getStatus().isFinalState()) {
+				notifiedObservers.add((CommitItem)observer);
+				unregister(observer);
+				VerigreenLogger.get().log(
+			             getClass().getName(),
+			             RuntimeUtils.getCurrentMethodName(),
+			             String.format(
+			                     "Successfully updated and saved observer: %s",
+			                     observer.toString()));
+			}
+			else {
+				unregister(observer);
+			}
 		}
 		
 		CollectorApi.getCommitItemContainer().save(notifiedObservers);

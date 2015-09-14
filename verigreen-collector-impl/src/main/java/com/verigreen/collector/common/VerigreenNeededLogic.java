@@ -159,7 +159,7 @@ public class VerigreenNeededLogic {
 	
 	public static String getSignature() {
         
-        return "<br><br><b>Have a <font color=\"green\">Verigreen</font> Day!</b></br><img src=\""+properties.getProperty("collector.address").replace("/rest","/VeriGreenLogo_Wide.png")+"\" width=\"250\" height=\"75\"></br></br>";
+        return "<br><br><b>Have a <font color='#8eb924'>Verigreen</font> Day!</b></br><a href='http://verigreen.io/'><img src=\""+properties.getProperty("collector.address").replace("/rest","/VeriGreenLogo.png")+"\" width='250px' height='75px'></a></br></br>";
     }
 
 	public void setJenkinsProperties() throws IOException
