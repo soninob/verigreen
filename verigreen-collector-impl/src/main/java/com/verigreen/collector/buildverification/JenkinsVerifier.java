@@ -167,6 +167,7 @@ public class JenkinsVerifier implements BuildVerifier {
 			 Map<String,String> commitParams = VerigreenNeededLogic.checkJenkinsMode(commitItem);
 			 commitItem.setTriggeredAttempt(true);
 			 jenkinsUpdater.register(commitItem);
+			 CollectorApi.getCommitItemContainer().save(commitItem);
 			 ImmutableMap.Builder<String, String> finalJenkinsParams = ImmutableMap.<String, String>builder().put("token",VerigreenNeededLogic.properties.getProperty("jenkins.password"));
 			 finalJenkinsParams.put(CollectorApi.getBranchParamName(), branchName);
 	         for(String key : commitParams.keySet())
@@ -175,6 +176,7 @@ public class JenkinsVerifier implements BuildVerifier {
 	         }
 	          final ImmutableMap<String, String> params = finalJenkinsParams.build();
 	          job2Verify.build(params);
+	          
 	         
 		} catch (IOException e) {
 		
