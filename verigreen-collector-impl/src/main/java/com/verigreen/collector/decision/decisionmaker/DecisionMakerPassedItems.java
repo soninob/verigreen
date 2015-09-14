@@ -89,7 +89,7 @@ public class DecisionMakerPassedItems {
             	VerigreenLogger.get().log(
                         getClass().getName(),
                         RuntimeUtils.getCurrentMethodName(),
-                        String.format("Setting failed  item as done (%s)", item));
+                        String.format("Setting failed item as done (%s)", item));
             	  item.setDone(true);
             	try {
           			CommitItemUtils.createJsonFile(item,true);
@@ -106,6 +106,7 @@ public class DecisionMakerPassedItems {
                               String.format("Failed creating json file: " + System.getenv("VG_HOME") + "\\history.json",
                               e));
           		}
+            	item.setStatus(VerificationStatus.PASSED);
                 ret.add(new Decision(item.getKey(), CollectorApi.getOnSuccessByChildHandler(item)));
                 CollectorApi.getCommitItemContainer().save(item);
             }
