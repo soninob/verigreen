@@ -278,7 +278,8 @@ public class CallJenkinsJob implements Job {
 		List<Observer> observers =  jenkinsUpdater.getObservers();
 		List<Observer> relevantObservers = new ArrayList<Observer>();
 		for(Observer observer : observers)
-		{
+		{	
+			observer = com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().get(((CommitItem)observer).getKey());
 			try {
 				//the default build url for an untriggered item is 0, also check for null value in the parsed results, that means that 
 				//the MinJenkinsJob didn't get any response for that particular commit item 

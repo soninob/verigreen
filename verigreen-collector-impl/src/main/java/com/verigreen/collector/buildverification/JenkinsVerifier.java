@@ -138,7 +138,7 @@ public class JenkinsVerifier implements BuildVerifier {
                     RuntimeUtils.getCurrentMethodName(),
                     String.format(
                             "Failed get job for verification after [%s] retries", retries - 1));
-			CollectorApi.getVerigreenNeededLogic().sendEmailNotification("Failed get job for verification", "Failed get job for verification: "+VerigreenNeededLogic.properties.getProperty("jenkins.jobName")+". Please contact your DevOps engineer, there might be a load on Jenkins that prevents creating new verification jobs.", new String[] { VerigreenNeededLogic.properties.getProperty("email.address") }, VerigreenNeededLogic.getSignature());
+			CollectorApi.getVerigreenNeededLogic().sendEmailNotification("Failed get job for verification", "<span style='font-family:HP Simplified;'>Failed get job for verification: "+VerigreenNeededLogic.properties.getProperty("jenkins.jobName")+". Please contact your DevOps engineer, there might be a load on Jenkins that prevents creating new verification jobs.</span>", new String[] { VerigreenNeededLogic.properties.getProperty("email.address") }, VerigreenNeededLogic.getSignature());
 		}
 		return jobToVerify;
 	}
