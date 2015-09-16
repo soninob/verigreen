@@ -46,9 +46,8 @@ public class CheckinDecisionHandler extends DecisionHandler {
 							_commitItem));
 			updateCommitItemToRunning();
 			//CommitItemVerifier verifier = CollectorApi.getCommitItemVerifier();
-			CollectorApi.getCommitItemVerifierManager().add(
-					CollectorApi.getCommitItemContainer().get(_commitItem.getKey()).getKey(), verifier);
-			verifier.verify(CollectorApi.getCommitItemContainer().get(_commitItem.getKey()));
+			CollectorApi.getCommitItemVerifierManager().add(_commitItem.getKey(), verifier);
+			verifier.verify(_commitItem);
 		}
 	}
 
