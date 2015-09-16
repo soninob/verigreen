@@ -138,7 +138,7 @@ public class JenkinsVerifier implements BuildVerifier {
                     RuntimeUtils.getCurrentMethodName(),
                     String.format(
                             "Failed get job for verification after [%s] retries", retries - 1));
-			CollectorApi.getVerigreenNeededLogic().sendEmailNotification("Failed get job for verification", "Failed get job for verification: "+VerigreenNeededLogic.properties.getProperty("jenkins.jobName")+". Please contact your DevOps engineer, there might be a load on Jenkins that prevents creating new verification jobs.", new String[] { VerigreenNeededLogic.properties.getProperty("email.address") }, VerigreenNeededLogic.getSignature());
+			CollectorApi.getVerigreenNeededLogic().sendEmailNotification("Failed get job for verification", "<span style='font-family:HP Simplified;'>Failed get job for verification: "+VerigreenNeededLogic.properties.getProperty("jenkins.jobName")+". Please contact your DevOps engineer, there might be a load on Jenkins that prevents creating new verification jobs.</span>", new String[] { VerigreenNeededLogic.properties.getProperty("email.address") }, VerigreenNeededLogic.getSignature());
 		}
 		return jobToVerify;
 	}
@@ -167,6 +167,7 @@ public class JenkinsVerifier implements BuildVerifier {
 			 Map<String,String> commitParams = VerigreenNeededLogic.checkJenkinsMode(commitItem);
 			 commitItem.setTriggeredAttempt(true);
 			 jenkinsUpdater.register(commitItem);
+			 CollectorApi.getCommitItemContainer().save(commitItem);
 			 ImmutableMap.Builder<String, String> finalJenkinsParams = ImmutableMap.<String, String>builder().put("token",VerigreenNeededLogic.properties.getProperty("jenkins.password"));
 			 finalJenkinsParams.put(CollectorApi.getBranchParamName(), branchName);
 	         for(String key : commitParams.keySet())
@@ -175,6 +176,7 @@ public class JenkinsVerifier implements BuildVerifier {
 	         }
 	          final ImmutableMap<String, String> params = finalJenkinsParams.build();
 	          job2Verify.build(params);
+	          
 	         
 		} catch (IOException e) {
 		

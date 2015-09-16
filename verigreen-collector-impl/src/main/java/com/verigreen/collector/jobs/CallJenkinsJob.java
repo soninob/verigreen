@@ -77,10 +77,15 @@ public class CallJenkinsJob implements Job {
 	}
 	
 	private void calllingJenkinsForCreate() {
-		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
+		VerigreenLogger.get().log(
+	             getClass().getName(),
+	             RuntimeUtils.getCurrentMethodName(),
+	             String.format(
+	                     "There are [%s] not triggered items...",
+	                     CommitItemVerifier.getInstance().getCommitItems().size() ));
 
 
-		
+		// triggers a job for each item in the commit item verifier
 		for (Iterator<CommitItem> iterator = CommitItemVerifier.getInstance().getCommitItems().iterator(); iterator.hasNext();) {
 			CommitItem ci = iterator.next();
 			iterator.remove();
@@ -89,23 +94,26 @@ public class CallJenkinsJob implements Job {
 			// Remove the current element from the iterator and the list.
 	        
 		}
-		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 	}
 
 	private RestClientResponse createRestCall(String param) {
-		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
+		
+		VerigreenLogger.get().log(
+				getClass().getName(),
+				RuntimeUtils.getCurrentMethodName(),
+				String.format(
+						"Sending REST call to Jenkins server..."));
+		
 		String jenkinsUrl = VerigreenNeededLogic.properties.getProperty("jenkins.url");
 		String jobName = VerigreenNeededLogic.properties.getProperty("jenkins.jobName");
 		
 		RestClientResponse result = new RestClientImpl().get(CollectorApi.getJenkinsCallRequest(jenkinsUrl, jobName, param));
-		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 		return result;
 	}
 
 	private void calllingJenkinsForUpdate() {
 
 		String result;
-		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
 		int sizeObservers = jenkinsUpdater.getObservers().size();
 		VerigreenLogger.get().log(
 	             getClass().getName(),
@@ -133,14 +141,15 @@ public class CallJenkinsJob implements Job {
 			             RuntimeUtils.getCurrentMethodName(),
 			             "Bad JSON response: " + result);//for security reasons - remove the result from the exception.
 			}
-		}
-		
-		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
-		
+		}		
 	}
 	private Map<String, MinJenkinsJob> parsingJSON(String json) throws JSONException {
 		
-		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
+		VerigreenLogger.get().log(
+	             getClass().getName(),
+	             RuntimeUtils.getCurrentMethodName(),
+	             String.format(
+	                     "Parsing JSON results fron Jenkins..."));
 		Map<String, MinJenkinsJob> buildsAndStatusesMap = new HashMap<String, MinJenkinsJob>();
 		JsonParser parser = new JsonParser();
 		JsonObject mainJson = (JsonObject) parser.parse(json);
@@ -181,7 +190,6 @@ public class CallJenkinsJob implements Job {
 				 buildsAndStatusesMap.put(values.getBranchName(), values);	
 				 
 		}
-		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 		return buildsAndStatusesMap;
 	}
 	
@@ -243,7 +251,7 @@ public class CallJenkinsJob implements Job {
 			com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().save(itemToBeChecked);
 		}
 		else{
-
+			//increase the retriable counter for the onserver, inregister it and retrigger the job
 			retriableCounter++;
 			timeoutCounter = 0;
 			itemToBeChecked.setTimeoutCounter(timeoutCounter);
@@ -261,12 +269,17 @@ public class CallJenkinsJob implements Job {
 		return System.currentTimeMillis() - ci.getRunTime().getTime() > _timeOutInMillies;
 	}
 	private List<Observer> analyzeResults(Map<String, MinJenkinsJob> parsedResults){
-		
-		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method started");
+		VerigreenLogger.get().log(
+	             getClass().getName(),
+	             RuntimeUtils.getCurrentMethodName(),
+	             String.format(
+	                     "Analyzing JSON results and returning the relevant observers..."));
+
 		List<Observer> observers =  jenkinsUpdater.getObservers();
 		List<Observer> relevantObservers = new ArrayList<Observer>();
 		for(Observer observer : observers)
-		{
+		{	
+			observer = com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().get(((CommitItem)observer).getKey());
 			try {
 				//the default build url for an untriggered item is 0, also check for null value in the parsed results, that means that 
 				//the MinJenkinsJob didn't get any response for that particular commit item 
@@ -321,7 +334,6 @@ public class CallJenkinsJob implements Job {
 	                    e);
 			}
 		}
-		VerigreenLogger.get().log(getClass().getName(), RuntimeUtils.getCurrentMethodName(), " - Method ended");
 		return relevantObservers;
 	}
 }

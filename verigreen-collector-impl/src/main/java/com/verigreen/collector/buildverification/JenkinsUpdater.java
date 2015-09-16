@@ -20,7 +20,7 @@ public class JenkinsUpdater implements Subject {
 	private ArrayList<Observer> observers = new ArrayList<>();
 	private static final Map<String,VerificationStatus> _verificationStatusesMap;
 	private static volatile JenkinsUpdater _instance; 
-    
+    // Map to make the correlation between the build results from Jenkins and the VerificationStatus class
 	static
     {
     	_verificationStatusesMap = new HashMap<String, VerificationStatus>();
@@ -76,92 +76,39 @@ public class JenkinsUpdater implements Subject {
 	}
 
 	public List<Observer> setObserversStatus(List<Observer> relevantObservers, Map <String, MinJenkinsJob> results){
+		//sets the observer status based on the result recieved from Jenkins
 		List<Observer> notifiedObservers = new ArrayList<Observer>();
 		MinJenkinsJob result;
 		for(Observer observer : relevantObservers)
 		{	
 			result = results.get(((CommitItem)observer).getMergedBranchName());
-			/*((CommitItem)observer).setBuildNumber(Integer.parseInt(result.getBuildNumber()));*/
-			
-			/*try {
-				((CommitItem)observer).setBuildUrl(new URI(JenkinsVerifier.getBuildUrl(Integer.parseInt(result.getBuildNumber()))));
-			} catch (URISyntaxException e) {
-				VerigreenLogger.get().error(
-	                    getClass().getName(),
-	                    RuntimeUtils.getCurrentMethodName(),
-	                    String.format(
-	                            "Illegal character in build URL: [%s]",
-	                            JenkinsVerifier.getBuildUrl(Integer.parseInt(result.getBuildNumber()))),
-	                    e);
-			}*/
-
 			observer.update(_verificationStatusesMap.get(result.getJenkinsResult()));
-			notifiedObservers.add(observer);
-			/*unregister(observer);*/
-			
+			notifiedObservers.add(observer);			
 		}
 		return notifiedObservers;
-		/*CollectorApi.getCommitItemContainer().save(notifiedObservers);*/
-		/*notifiedObservers.clear();*/
 	}
 	
 	@Override
 	public void notifyObserver(List<Observer> relevantObservers) {
-		
+	//the relevant observers are notified, unregistered and saved to the commit item container	
 		List<CommitItem> notifiedObservers = new ArrayList<CommitItem>();
 		for(Observer observer : relevantObservers){
-			
-			notifiedObservers.add((CommitItem)observer);
-			/*if(!((CommitItem)observer).getStatus().equals(VerificationStatus.RUNNING))
-			{*/
-				unregister(observer);
-			/*}*/
-			VerigreenLogger.get().log(
-		             getClass().getName(),
-		             RuntimeUtils.getCurrentMethodName(),
-		             String.format(
-		                     "Successfully updated and saved observer: %s",
-		                     observer.toString()));
-		}
-		
-		CollectorApi.getCommitItemContainer().save(notifiedObservers);
-
-		/*List<CommitItem> notifiedObservers = new ArrayList<CommitItem>();
-		for(Observer observer : relevantObservers)
-		{
-				List<String> result = results.get(((CommitItem)observer).getMergedBranchName());
-				observer.updateBuildNumber(Integer.parseInt(result.get(0)));
-				try {
-					observer.updateBuildUrl(new URI(JenkinsVerifier.getBuildUrl(Integer.parseInt(result.get(0)))));
-				} catch (URISyntaxException e) {
-					VerigreenLogger.get().error(
-		                    getClass().getName(),
-		                    RuntimeUtils.getCurrentMethodName(),
-		                    String.format(
-		                            "Illegal character in build URL: [%s]",
-		                            JenkinsVerifier.getBuildUrl(Integer.parseInt(result.get(0)))),
-		                    e);
-				}
-				observer.update(_verificationStatusesMap.get(result.get(1)));
+			if(!com.verigreen.collector.spring.CollectorApi.getCommitItemContainer().get(((CommitItem)observer).getKey()).getStatus().isFinalState()) {
 				notifiedObservers.add((CommitItem)observer);
-				
-				if(!((CommitItem)observer).getStatus().equals(VerificationStatus.RUNNING))
-				{
-					unregister(observer);
-				}
+				unregister(observer);
 				VerigreenLogger.get().log(
 			             getClass().getName(),
 			             RuntimeUtils.getCurrentMethodName(),
 			             String.format(
 			                     "Successfully updated and saved observer: %s",
 			                     observer.toString()));
-			
-	
+			}
+			else {
+				unregister(observer);
+			}
 		}
-		notifiedObservers.clear();
-		CollectorApi.getCommitItemContainer().save(notifiedObservers);
-		;*/
 		
+		CollectorApi.getCommitItemContainer().save(notifiedObservers);
 	}
 	
 }

@@ -32,7 +32,6 @@ public class OnSuccessByChildHandler extends DecisionHandler {
     protected void doHandle() {
         
         cancelJobIfRunning();
-        JenkinsUpdater.getInstance().unregister(_commitItem);
         _commitItem.setStatus(VerificationStatus.PASSED_BY_CHILD);
         CollectorApi.getCommitItemContainer().save(_commitItem);
         deleteVerificationBranch();

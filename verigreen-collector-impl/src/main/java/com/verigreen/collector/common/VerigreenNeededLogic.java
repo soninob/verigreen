@@ -73,7 +73,7 @@ public class VerigreenNeededLogic {
 	                    RuntimeUtils.getCurrentMethodName(),
 	                    String.format("Repository not found: %s", properties.getProperty("git.repositoryLocation")),
 	                    thrown);
-	    	  sendEmailNotification("Repository not found", "Repository not found: "+properties.getProperty("git.repositoryLocation")+". "+thrown.getMessage()+".", new String[] { properties.getProperty("email.address") }, getSignature());
+	    	  sendEmailNotification("Repository not found", "<span style='font-family:HP Simplified;'>Repository not found: "+properties.getProperty("git.repositoryLocation")+". "+thrown.getMessage()+".</span>", new String[] { properties.getProperty("email.address") }, getSignature());
 			}
 
 			Thread t = new Thread(new Watchdir());
@@ -159,7 +159,7 @@ public class VerigreenNeededLogic {
 	
 	public static String getSignature() {
         
-        return "<br><br><b>Have a <font color=\"green\">Verigreen</font> Day!</b></br><img src=\""+properties.getProperty("collector.address").replace("/rest","/VeriGreenLogo_Wide.png")+"\" width=\"250\" height=\"75\"></br></br>";
+        return "<br><br><div style='vertical-align:middle; font-family:HP Simplified; font-size:17;'><b><font color='#3D3D3D'>HAVE A <a href='http://verigreen.io/'><img src=\'"+properties.getProperty("collector.address").replace("/rest","/VeriGreenLogo.png")+"\' width='180' height='45'></a>DAY ! </font></b></div></br></br>";
     }
 
 	public void setJenkinsProperties() throws IOException
