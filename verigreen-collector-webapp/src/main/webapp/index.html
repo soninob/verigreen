@@ -110,7 +110,7 @@
 						<td title="Parent branch" ng-hide="!showParentBranch">{{isParentBranchValid(item.parentBranch)}}</td>
 						<td title="Committer Email" ng-hide="!showCommitter">{{item.branchDescriptor.committer}}</td>
 						<td title="Commit verification status" ng-hide="!showStatus" style="min-width: 190px;"><img ng-src="{{getImage(item.status)}}" class="statusImg"/>{{item.status}}</td>
-					    <td title="Retry mechanism" ng-hide="!showRetry"><div ng-hide="true">{{item.branchDescriptor.commitId}}</div><button class="btn btn-default retryButton" ng-click="retry(item.branchDescriptor.committer,item.branchDescriptor.protectedBranch,item.branchDescriptor.newBranch,item.branchDescriptor.commitId)" ng-disabled="button(item.status,item.branchDescriptor.commitId,displayMode.Mode,item.runTimeStr,item.endTimeStr)">Retry</button></td>
+					    <td title="Retry mechanism" ng-hide="!showRetry"><div ng-hide="true">{{item.branchDescriptor.commitId}}</div><button class="btn btn-default retryButton" ng-click="retry(item.branchDescriptor.committer,item.branchDescriptor.protectedBranch,item.branchDescriptor.newBranch,item.branchDescriptor.commitId)" ng-disabled="button(item.status,item.branchDescriptor.commitId,displayMode.Mode,item.runDateTimeString,item.endDateTimeString)">Retry</button></td>
 						<td title="Git push time" ng-hide="!showCreationTime">{{item.creationDateTimeString}}</td>
 						<td title="Sent to Jenkins time" ng-hide="!showRunTime">{{item.runDateTimeString}}</td>
 						<td title="Verification End time" ng-hide="!showEndTime">{{item.endDateTimeString}}</td>
