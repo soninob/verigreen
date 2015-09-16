@@ -161,7 +161,7 @@ public class JenkinsVerifier implements BuildVerifier {
     	String branchName = commitItem.getMergedBranchName();
 
 		try {
-	         VerigreenLogger.get().log(RuntimeUtils.class.getName(),
+	         VerigreenLogger.get().log(JenkinsVerifier.class.getName(),
 	        		 RuntimeUtils.getCurrentMethodName(),
 	        		 String.format("Triggering job [%s] for branch [%s]", job2Verify.getName(), branchName));
 			 Map<String,String> commitParams = VerigreenNeededLogic.checkJenkinsMode(commitItem);
