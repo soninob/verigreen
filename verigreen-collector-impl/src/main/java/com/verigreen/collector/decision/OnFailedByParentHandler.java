@@ -15,6 +15,9 @@ import com.verigreen.collector.common.log4j.VerigreenLogger;
 import com.verigreen.collector.model.CommitItem;
 import com.verigreen.collector.spring.CollectorApi;
 import com.verigreen.common.concurrency.RuntimeUtils;
+import com.verigreen.common.concurrency.ExecutorServiceFactory;
+
+
 
 public class OnFailedByParentHandler extends DecisionHandler {
     
@@ -30,12 +33,18 @@ public class OnFailedByParentHandler extends DecisionHandler {
                 getClass().getName(),
                 RuntimeUtils.getCurrentMethodName(),
                 String.format("Cancelling verification of %s...", _commitItem));
-    	CollectorApi.getJenkinsVerifier().stop(CollectorApi.getVerificationJobName(), String.valueOf(_commitItem.getBuildNumberToStop()));
-    	
-/*       CommitItemVerifier verifier =
-                CollectorApi.getCommitItemVerifierManager().get(_commitItem.getKey());
-        if (verifier != null) {
-            verifier.cancel();
-        }*/
+
+
+        ExecutorServiceFactory.fireAndForget(new Runnable() {
+        
+        @Override
+        public void run() 
+        {
+            CollectorApi.getJenkinsVerifier().stop(CollectorApi.getVerificationJobName(), String.valueOf(_commitItem.getBuildNumberToStop()));
+        }
+        
+        });
+
+
     }
 }
